@@ -3,7 +3,7 @@
 #
 #   curl -fsSL https://mcpzero.io/install.sh | sh
 #
-# Downloads the latest pre-built `mcp-zero` binary for your platform from
+# Downloads the latest pre-built `mcpzero` binary for your platform from
 # https://mcpzero.io/dl/ and installs it onto your PATH. POSIX sh — no bash,
 # Go, or build tools required.
 #
@@ -54,7 +54,7 @@ case "$os" in
   Darwin) OS="darwin" ;;
   Linux)  OS="linux" ;;
   MINGW*|MSYS*|CYGWIN*)
-    die "Windows is not supported by this script. Download mcp-zero-windows-amd64.exe from https://github.com/${REPO}/releases" ;;
+    die "Windows is not supported by this script. Download mcpzero-windows-amd64.exe from https://github.com/${REPO}/releases" ;;
   *) die "unsupported OS: $os" ;;
 esac
 

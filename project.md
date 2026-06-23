@@ -8,7 +8,7 @@
 
 ## 二、 核心功能模块 (Core Features)
 
-1. **MCPZERO Tunnel (穿透层)：** 开发者通过本地轻量级客户端（`mcp-zero` CLI），一行命令将本地 Stdio 模式的 MCP Server 转换为公网可访问的远程端点，无需配置域名和 SSL 证书。
+1. **MCPZERO Tunnel (穿透层)：** 开发者通过本地轻量级客户端（`mcpzero` CLI），一行命令将本地 Stdio 模式的 MCP Server 转换为公网可访问的远程端点，无需配置域名和 SSL 证书。
 2. **Edge Auth Gateway (安全网关层)：** 部署在 Cloudflare 全球边缘节点，拦截所有客户端请求，进行毫秒级的 API Key 校验和多租户余额检查（Rate Limiting & Metering）。
 3. **Observability Ledger (可视化账本)：** 异步解析 JSON-RPC 请求与返回体，全链路追踪 AI Agent 的每一次工具调用（Tool Call），提供精美的 Web 端链路回放看板。
 4. **Monetization Engine (变现引擎)：** 支持 Web2 友好的信用卡充值与积分余额扣费系统，支持按 Tool 细粒度定价，自动完成平台抽成与开发者分账。
@@ -46,7 +46,7 @@
          │
          │ (4) 通过已建立的 WebSocket 隧道转发加密后的 JSON-RPC
          ▼
- [ 用户本地 / 托管容器 (mcp-zero CLI) ]
+ [ 用户本地 / 托管容器 (mcpzero CLI) ]
          │
          │ (5) 管道桥接 (Pipes)
          ▼
@@ -55,7 +55,7 @@
 
 ### 2. 核心交互流程
 
-1. **建立连接：** 开发者在本地运行 `mcp-zero --token xyz`，与 Cloudflare Workers 建立一条持久的 WebSocket 隧道，Workers 在 KV 中标记该用户隧道在线。
+1. **建立连接：** 开发者在本地运行 `mcpzero --token xyz`，与 Cloudflare Workers 建立一条持久的 WebSocket 隧道，Workers 在 KV 中标记该用户隧道在线。
 2. **请求鉴权：** AI Client 访问 `https://gw.mcpzero.io/v1/user_abc`，网关从 KV 中秒级验证 Header 中的 API Key 状态及买家点数余额。
 3. **隧道通信与转换：** 鉴权通过后，网关将 HTTP 请求体包裹为 JSON-RPC，通过 WebSocket 灌入本地 CLI。CLI 将其写入本地 MCP 的 `stdin`。
 4. **流式返回与记账：** 本地 MCP 的 `stdout` 吐出结果，CLI 通过 WebSocket 回传给网关。网关一方面流式（SSE）响应给 AI Client，另一方面触发 D1 数据库记录本次 Tool 扣费及审计日志。
@@ -118,7 +118,7 @@ CREATE TABLE usage_ledger (
 ## 六、 项目路线图 (Milestones & Roadmap)
 
 ### Phase 1: MVP 验证阶段 (1-2 周)
-* [ ] 编写基于 Node.js/Go 的轻量级本地 CLI 原型（`mcp-zero`）。
+* [ ] 编写基于 Node.js/Go 的轻量级本地 CLI 原型（`mcpzero`）。
 * [ ] 实现 Cloudflare Workers WebSocket 隧道服务，完成 `HTTP SSE <-> WebSocket <-> Stdio` 的双向流式协议转换。
 * [ ] 在 Workers 中加入固定 API Key 的硬编码鉴权，跑通 Cursor 远程连接本地 MCP。
 
