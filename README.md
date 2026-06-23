@@ -51,7 +51,6 @@ go get github.com/mcpzero/sdk-go # Go
 - Product docs: https://mcpzero.io/docs (source of truth lives in [`docs/`](./docs/))
 - Tunnel wire protocol: [`PROTOCOL.md`](./PROTOCOL.md)
 - Runnable examples: [`examples/`](./examples/)
-- Product design: [`project.md`](./project.md)
 
 ## License
 
