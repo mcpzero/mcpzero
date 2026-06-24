@@ -23,7 +23,11 @@ brew install mcpzero/tap/mcpzero
 mcpzero tunnel start --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp"
 ```
 
-(or `curl -fsSL https://mcpzero.io/install.sh | sh`)
+(or `curl -fsSL https://mcpzero.io/install.sh | sh`, or with Go:
+`go install github.com/mcpzero/mcpzero/cli/cmd/mcpzero@latest`)
+
+The CLI source lives in [`cli/`](./cli/); see its [README](./cli/README.md) for
+building from source and the full command reference.
 
 **Or tunnel from your own code with the SDK:**
 
@@ -38,8 +42,8 @@ go get github.com/mcpzero/sdk-go # Go
 
 | Repo | What | License |
 |------|------|---------|
-| [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec | MIT |
-| [`cli`](https://github.com/mcpzero/cli) | `mcpzero` tunnel client (Go) | OSS |
+| [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
+| [`cli/`](./cli/) | `mcpzero` tunnel client (Go) — part of this repo | OSS |
 | [`sdk-ts`](https://github.com/mcpzero/sdk-ts) | TypeScript SDK — npm `mcpzero-sdk` | MIT |
 | [`sdk-go`](https://github.com/mcpzero/sdk-go) | Go SDK — `github.com/mcpzero/sdk-go` | MIT |
 | [`sdk-py`](https://github.com/mcpzero/sdk-py) | Python SDK — PyPI `mcpzero-sdk` | MIT |

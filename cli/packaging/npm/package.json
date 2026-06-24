@@ -1,0 +1,33 @@
+{
+  "name": "mcpzero-cli",
+  "version": "0.1.1",
+  "description": "MCPZERO tunnel CLI — installs the prebuilt `mcpzero` binary for your platform.",
+  "license": "MIT",
+  "homepage": "https://mcpzero.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcpzero/mcpzero.git"
+  },
+  "bin": {
+    "mcpzero": "bin/mcpzero.js"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "files": [
+    "bin/mcpzero.js",
+    "install.js"
+  ],
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

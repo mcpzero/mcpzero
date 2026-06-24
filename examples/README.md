@@ -24,8 +24,8 @@ examples/
 ## Quick links
 
 - **SDK examples** live in the SDK repo:
-  - TypeScript — `mcpzero/sdk` → `typescript/examples/`
-  - Python — `mcpzero/sdk` → `python/examples/`
+  - TypeScript — `mcpzero/sdk-ts` → `typescript/examples/`
+  - Python — `mcpzero/sdk-py` → `python/examples/`
 - **CLI tunnel** — `mcpzero tunnel start --mcp-cmd "<your server>"`
   (see [docs/cli/tunnel](https://mcpzero.io/docs/cli/tunnel/))
 - **Connect a client** — see the per-endpoint setup in the

@@ -1,0 +1,31 @@
+name: CI
+
+# CLI lives in the cli/ subdirectory of this monorepo. Only run when CLI code
+# (or this workflow) changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cli/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "cli/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: cli
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22"
+          cache-dependency-path: cli/go.sum
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go build ./...

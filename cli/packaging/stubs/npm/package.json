@@ -1,0 +1,9 @@
+{
+  "name": "mcpzero",
+  "version": "0.0.0",
+  "description": "Reserved namespace. Install the CLI as `mcpzero-cli` or the SDK as `mcpzero-sdk`.",
+  "license": "MIT",
+  "homepage": "https://mcpzero.io",
+  "keywords": ["mcp", "mcpzero"],
+  "files": ["README.md"]
+}

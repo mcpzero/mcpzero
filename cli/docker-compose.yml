@@ -1,0 +1,8 @@
+services:
+  golang:
+    image: golang:1.22-bookworm
+    working_dir: /src
+    volumes:
+      - .:/src
+    environment:
+      CGO_ENABLED: "0"

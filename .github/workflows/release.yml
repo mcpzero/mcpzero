@@ -1,0 +1,126 @@
+name: Release
+
+# Builds and publishes the mcpzero CLI (lives in the cli/ subdirectory).
+# Triggers ONLY on version tags such as v0.1.0, v1.2.3, v1.0.0-rc1
+# (pattern: a leading "v" followed by a digit).
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+permissions:
+  contents: write # required to create the GitHub Release
+
+jobs:
+  release:
+    name: Build & publish CLI
+    runs-on: ubuntu-latest
+    env:
+      # gh (preinstalled on the runner) authenticates via this token.
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Optional: Cloudflare R2 upload (mcpzero.io/dl). Skipped if unset.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Optional: PAT with write access to mcpzero/homebrew-tap. Skipped if unset.
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    steps:
+      - name: Checkout mcpzero
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.22"
+          cache-dependency-path: cli/go.sum
+
+      - name: Derive version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Install wrangler (for R2 upload)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npm install -g wrangler
+
+      - name: Checkout homebrew-tap (for formula bump)
+        if: env.HOMEBREW_TAP_TOKEN != ''
+        uses: actions/checkout@v5
+        with:
+          repository: mcpzero/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Build, package & publish
+        working-directory: cli
+        env:
+          HOMEBREW_TAP_DIR: ${{ github.workspace }}/homebrew-tap
+        run: |
+          # Always publish the GitHub Release (GITHUB_TOKEN is always present).
+          # R2 and Homebrew steps run only when their secrets are configured.
+          export SKIP_R2=$([ -n "$CLOUDFLARE_API_TOKEN" ] && echo 0 || echo 1)
+          export SKIP_FORMULA=$([ -n "$HOMEBREW_TAP_TOKEN" ] && echo 0 || echo 1)
+          ./scripts/release.sh "$VERSION"
+
+      - name: Commit & push Homebrew formula bump
+        if: env.HOMEBREW_TAP_TOKEN != ''
+        working-directory: homebrew-tap
+        run: |
+          if git diff --quiet; then
+            echo "no formula changes to push"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "mcpzero ${VERSION}"
+            git push
+          fi
+
+  publish-wrappers:
+    name: Publish npm & PyPI wrappers
+    needs: release # binaries must be on the GitHub Release before publishing
+    runs-on: ubuntu-latest # npm Trusted Publishing requires a GitHub-hosted runner
+    permissions:
+      id-token: write # npm Trusted Publishing (OIDC) — publishes without a token
+      contents: read
+    env:
+      # npm publishes via Trusted Publishing (OIDC): NO npm token. Configure the
+      # trusted publisher on npmjs.com first (package mcpzero-cli → org mcpzero,
+      # repo mcpzero, workflow filename release.yml). PyPI still uses a token if
+      # PYPI_API_TOKEN is configured. Wrappers download the binary from the
+      # GitHub Release created by the `release` job.
+      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+    steps:
+      - name: Checkout mcpzero
+        uses: actions/checkout@v5
+
+      - name: Derive version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Set up Node (npm Trusted Publishing / OIDC)
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24" # ships npm >= 11.5.1, required for OIDC publishing
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm (ensure OIDC support)
+        run: npm install -g npm@latest
+
+      - name: Set up Python (for PyPI publish)
+        if: env.PYPI_API_TOKEN != ''
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install PyPI build tooling
+        if: env.PYPI_API_TOKEN != ''
+        run: pip install build twine
+
+      - name: Publish mcpzero-cli wrappers
+        working-directory: cli
+        env:
+          # No NODE_AUTH_TOKEN on purpose: npm authenticates via the OIDC identity
+          # granted by `id-token: write`. Provenance is attached automatically.
+          NPM_CONFIG_PROVENANCE: "true"
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          # npm always publishes (via OIDC); PyPI only when a token is configured.
+          export SKIP_PYPI=$([ -n "$TWINE_PASSWORD" ] && echo 0 || echo 1)
+          ./scripts/publish-packages.sh "$VERSION"

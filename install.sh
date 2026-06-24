@@ -3,21 +3,27 @@
 #
 #   curl -fsSL https://mcpzero.io/install.sh | sh
 #
-# Downloads the latest pre-built `mcpzero` binary for your platform from
-# https://mcpzero.io/dl/ and installs it onto your PATH. POSIX sh — no bash,
-# Go, or build tools required.
+# Downloads the pre-built `mcpzero` binary for your platform and installs it onto
+# your PATH. By default it pulls from the project's GitHub Releases; set
+# MCPZERO_BASE_URL to install from a mirror instead (e.g. the Cloudflare R2 store
+# at https://mcpzero.io/dl). POSIX sh — no bash, Go, or build tools required.
 #
 # Environment overrides:
 #   MCPZERO_VERSION      Install a specific version (e.g. 0.1.0). Default: latest.
 #   MCPZERO_INSTALL_DIR  Target bin directory. Default: ~/.local/bin (falls back
 #                        to /usr/local/bin with sudo when needed).
-#   MCPZERO_BASE_URL     Download base URL. Default: https://mcpzero.io/dl.
+#   MCPZERO_BASE_URL     Install from this base URL (mirror / R2 layout) instead
+#                        of GitHub Releases, e.g. https://mcpzero.io/dl.
+#   MCPZERO_REPO         GitHub repo for releases. Default: mcpzero/mcpzero.
 
 set -eu
 
-BASE_URL="${MCPZERO_BASE_URL:-https://mcpzero.io/dl}"
+# When set, install from this base URL (mirror / R2 layout); otherwise install
+# from the GitHub Releases of REPO.
+BASE_URL="${MCPZERO_BASE_URL:-}"
 BASE_URL="${BASE_URL%/}"
 BINARY="mcpzero"
+REPO="${MCPZERO_REPO:-mcpzero/mcpzero}"
 
 # ---- pretty output -----------------------------------------------------------
 if [ -t 1 ]; then
@@ -65,22 +71,58 @@ case "$arch" in
   *) die "unsupported architecture: $arch" ;;
 esac
 
-# ---- resolve version + asset -------------------------------------------------
-# Versioned releases live under /dl/v<ver>/ with version-stamped filenames; the
-# rolling latest lives under /dl/latest/ with version-less filenames.
-VERSION="${MCPZERO_VERSION:-}"
-if [ -n "$VERSION" ]; then
-  ver="${VERSION#v}"
-  CHANNEL="v${ver}"
-  ASSET="${BINARY}_${ver}_${OS}_${ARCH}.tar.gz"
-else
-  CHANNEL="latest"
-  ASSET="${BINARY}_${OS}_${ARCH}.tar.gz"
-  ver="$($DL "${BASE_URL}/latest/VERSION" 2>/dev/null | head -n1 || true)"
-fi
+# Resolve the latest release version from the GitHub /releases/latest redirect
+# (avoids the API and its rate limits). Prints the version without a leading v.
+gh_latest_version() {
+  _loc=""
+  if have curl; then
+    _loc="$(curl -fsSLI -o /dev/null -w '%{url_effective}' "${GH}/latest" 2>/dev/null || true)"
+  elif have wget; then
+    _loc="$(wget -S --max-redirect=20 -O /dev/null "${GH}/latest" 2>&1 \
+      | awk 'tolower($1) == "location:" { u = $2 } END { print u }')"
+  fi
+  [ -n "$_loc" ] || return 1
+  _tag="${_loc##*/}"   # .../releases/tag/v1.2.3 -> v1.2.3
+  _tag="${_tag%%\?*}"  # strip any ?query suffix
+  [ -n "$_tag" ] || return 1
+  printf '%s' "${_tag#v}"
+}
 
-BASE="${BASE_URL}/${CHANNEL}"
-URL="${BASE}/${ASSET}"
+# ---- resolve version + asset -------------------------------------------------
+# Two sources, selected by whether MCPZERO_BASE_URL is set:
+#  * GitHub Releases (default): assets at
+#    https://github.com/<repo>/releases/download/v<ver>/mcpzero_<ver>_<os>_<arch>.tar.gz
+#    "latest" is resolved from the /releases/latest redirect.
+#  * Mirror / R2 (MCPZERO_BASE_URL set): versioned builds under <base>/v<ver>/
+#    and a rolling <base>/latest/ with version-less names + a latest/VERSION file.
+VERSION="${MCPZERO_VERSION:-}"
+
+if [ -n "$BASE_URL" ]; then
+  if [ -n "$VERSION" ]; then
+    ver="${VERSION#v}"
+    CHANNEL="v${ver}"
+    ASSET="${BINARY}_${ver}_${OS}_${ARCH}.tar.gz"
+  else
+    CHANNEL="latest"
+    ASSET="${BINARY}_${OS}_${ARCH}.tar.gz"
+    ver="$($DL "${BASE_URL}/latest/VERSION" 2>/dev/null | head -n1 || true)"
+  fi
+  BASE="${BASE_URL}/${CHANNEL}"
+  URL="${BASE}/${ASSET}"
+  SUMS_URL="${BASE}/SHA256SUMS"
+else
+  GH="https://github.com/${REPO}/releases"
+  if [ -n "$VERSION" ]; then
+    ver="${VERSION#v}"
+  else
+    ver="$(gh_latest_version || true)"
+    [ -n "$ver" ] || die "could not determine the latest release from ${GH}/latest
+     Pin a version with MCPZERO_VERSION=<x.y.z>, or see https://mcpzero.io/docs/cli/install/"
+  fi
+  ASSET="${BINARY}_${ver}_${OS}_${ARCH}.tar.gz"
+  URL="${GH}/download/v${ver}/${ASSET}"
+  SUMS_URL="${GH}/download/v${ver}/SHA256SUMS"
+fi
 
 # ---- download ----------------------------------------------------------------
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/mcpzero.XXXXXX")"
@@ -93,7 +135,7 @@ if ! $DL_OUT "$tmp/$ASSET" "$URL" 2>/dev/null; then
 fi
 
 # ---- verify checksum (best effort) ------------------------------------------
-if $DL_OUT "$tmp/SHA256SUMS" "${BASE}/SHA256SUMS" 2>/dev/null; then
+if $DL_OUT "$tmp/SHA256SUMS" "$SUMS_URL" 2>/dev/null; then
   expected="$(grep " .${ASSET}\$" "$tmp/SHA256SUMS" 2>/dev/null | awk '{print $1}' | head -n1)"
   if [ -n "$expected" ]; then
     if have shasum; then actual="$(shasum -a 256 "$tmp/$ASSET" | awk '{print $1}')"

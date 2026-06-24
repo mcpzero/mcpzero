@@ -106,7 +106,7 @@ Cursor (`~/.cursor/mcp.json`) or any `mcpServers`-style config:
 }
 ```
 
-Every call shows up in [Dashboard → Ledger](https://mcpzero.io/app/ledger) with
+Every call shows up in [Dashboard → Activity](https://mcpzero.io/app/activity) with
 tool name, latency, and payloads.
 
 ## Read-only / safety notes
