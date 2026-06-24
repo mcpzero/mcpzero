@@ -25,7 +25,8 @@ Configuration is consistent across languages via environment variables:
 | Variable | Description |
 |----------|-------------|
 | `MCPZERO_ENDPOINT_ID` | Endpoint ID from the [Dashboard](/app/endpoints) |
-| `MCPZERO_TUNNEL_TOKEN` | Per-endpoint tunnel token from the Dashboard |
+| `MCPZERO_MGMT_KEY` | User-level [management key](/app/management-keys) — publishes any endpoint you own (preferred) |
+| `MCPZERO_TUNNEL_TOKEN` | Legacy per-endpoint tunnel token (still accepted) |
 | `MCPZERO_GW_BASE` | Optional gateway base (default `https://gw.mcpzero.io`) |
 
 Pick your language:

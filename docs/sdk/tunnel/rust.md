@@ -16,10 +16,15 @@ mcpzero = "0"
 ## Prerequisites
 
 - An [endpoint created](/app/endpoints) in the Dashboard (note its ID, e.g. `ep_abc123`)
-- The endpoint's **tunnel token**
+- A [**management key**](/app/management-keys) — a user-level credential that lets
+  the SDK publish (register a tunnel for) any endpoint you own, the headless
+  alternative to `mcpzero login`.
 
-Empty `Config` fields fall back to `MCPZERO_ENDPOINT_ID` / `MCPZERO_TUNNEL_TOKEN`
+Empty `Config` fields fall back to `MCPZERO_ENDPOINT_ID` / `MCPZERO_MGMT_KEY`
 (gateway base from `MCPZERO_GW_BASE`, default `https://gw.mcpzero.io`).
+
+> A management key is **not** an API key. An API key is the consumer-side
+> credential AI clients use to *call* your published endpoint.
 
 ## In-process server (primary)
 

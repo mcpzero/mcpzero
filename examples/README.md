@@ -36,4 +36,4 @@ examples/
 
 Each example is a self-contained directory with its own README and a single
 command to run it. Keep secrets in env vars (`MCPZERO_ENDPOINT_ID`,
-`MCPZERO_TUNNEL_TOKEN`, `MCPZERO_API_KEY`).
+`MCPZERO_MGMT_KEY`, `MCPZERO_API_KEY`).

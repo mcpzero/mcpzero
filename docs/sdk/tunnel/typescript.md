@@ -13,10 +13,15 @@ npm install mcpzero-sdk
 ## Prerequisites
 
 - An [endpoint created](/app/endpoints) in the Dashboard (note its ID, e.g. `ep_abc123`)
-- The endpoint's **tunnel token**
+- A [**management key**](/app/management-keys) — a user-level credential that lets
+  the SDK publish (register a tunnel for) any endpoint you own, the headless
+  alternative to `mcpzero login`.
 
-By convention these are read from `MCPZERO_ENDPOINT_ID` and `MCPZERO_TUNNEL_TOKEN`
+By convention these are read from `MCPZERO_ENDPOINT_ID` and `MCPZERO_MGMT_KEY`
 (gateway base from `MCPZERO_GW_BASE`, default `https://gw.mcpzero.io`).
+
+> A management key is **not** an API key. An API key is the consumer-side
+> credential AI clients use to *call* your published endpoint.
 
 ## In-process server (primary)
 
@@ -36,7 +41,7 @@ const server = new Server(
 
 const tunnel = new McpZeroTunnel({
   endpointId: process.env.MCPZERO_ENDPOINT_ID,
-  token: process.env.MCPZERO_TUNNEL_TOKEN,
+  managementKey: process.env.MCPZERO_MGMT_KEY,
 });
 await server.connect(tunnel);
 

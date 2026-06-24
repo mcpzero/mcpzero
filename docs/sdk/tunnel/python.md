@@ -14,10 +14,15 @@ pip install "mcpzero[mcp]"   # + in-process adapter for the official MCP SDK
 ## Prerequisites
 
 - An [endpoint created](/app/endpoints) in the Dashboard (note its ID, e.g. `ep_abc123`)
-- The endpoint's **tunnel token**
+- A [**management key**](/app/management-keys) — a user-level credential that lets
+  the SDK publish (register a tunnel for) any endpoint you own, the headless
+  alternative to `mcpzero login`.
 
-By convention these are read from `MCPZERO_ENDPOINT_ID` and `MCPZERO_TUNNEL_TOKEN`
+By convention these are read from `MCPZERO_ENDPOINT_ID` and `MCPZERO_MGMT_KEY`
 (gateway base from `MCPZERO_GW_BASE`, default `https://gw.mcpzero.io`).
+
+> A management key is **not** an API key. An API key is the consumer-side
+> credential AI clients use to *call* your published endpoint.
 
 ## In-process server (primary)
 
@@ -31,13 +36,13 @@ from mcp.server.lowlevel import Server
 server = Server("my-mcp")
 # @server.list_tools() / @server.call_tool() …
 
-asyncio.run(mcpzero.serve(server, endpoint_id="ep_abc123", token="..."))
+asyncio.run(mcpzero.serve(server, endpoint_id="ep_abc123", management_key="mzm_..."))
 ```
 
 Or drive the streams yourself:
 
 ```python
-async with mcpzero.tunnel(endpoint_id="ep_abc123", token="...") as (read, write):
+async with mcpzero.tunnel(endpoint_id="ep_abc123", management_key="mzm_...") as (read, write):
     await server.run(read, write, server.create_initialization_options())
 ```
 
