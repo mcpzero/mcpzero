@@ -9,7 +9,7 @@ const path = require("path");
 const https = require("https");
 const { execFileSync } = require("child_process");
 
-// GitHub Release assets: <base>/v<version>/mcpzero_<version>_<os>_<arch>.<ext>
+// GitHub Release assets: <base>/v<version>/mcpzero-cli_<version>_<os>_<arch>.<ext>
 const BASE_URL = (process.env.MCPZERO_BASE_URL || "https://github.com/mcpzero/mcpzero/releases/download").replace(/\/$/, "");
 const VERSION = require("./package.json").version;
 
@@ -26,7 +26,7 @@ const arch = ARCH_MAP[process.arch];
 if (!os || !arch) fail(`unsupported platform ${process.platform}/${process.arch}`);
 
 const ext = os === "windows" ? "zip" : "tar.gz";
-const asset = `mcpzero_${VERSION}_${os}_${arch}.${ext}`;
+const asset = `mcpzero-cli_${VERSION}_${os}_${arch}.${ext}`;
 const url = `${BASE_URL}/v${VERSION}/${asset}`;
 
 const binDir = path.join(__dirname, "bin");

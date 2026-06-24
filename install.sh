@@ -22,7 +22,8 @@ set -eu
 # from the GitHub Releases of REPO.
 BASE_URL="${MCPZERO_BASE_URL:-}"
 BASE_URL="${BASE_URL%/}"
-BINARY="mcpzero"
+BINARY="mcpzero"      # binary inside the archive + installed command name
+PKG="mcpzero-cli"     # archive (tarball/zip) base name
 REPO="${MCPZERO_REPO:-mcpzero/mcpzero}"
 
 # ---- pretty output -----------------------------------------------------------
@@ -91,7 +92,7 @@ gh_latest_version() {
 # ---- resolve version + asset -------------------------------------------------
 # Two sources, selected by whether MCPZERO_BASE_URL is set:
 #  * GitHub Releases (default): assets at
-#    https://github.com/<repo>/releases/download/v<ver>/mcpzero_<ver>_<os>_<arch>.tar.gz
+#    https://github.com/<repo>/releases/download/v<ver>/mcpzero-cli_<ver>_<os>_<arch>.tar.gz
 #    "latest" is resolved from the /releases/latest redirect.
 #  * Mirror / R2 (MCPZERO_BASE_URL set): versioned builds under <base>/v<ver>/
 #    and a rolling <base>/latest/ with version-less names + a latest/VERSION file.
@@ -101,10 +102,10 @@ if [ -n "$BASE_URL" ]; then
   if [ -n "$VERSION" ]; then
     ver="${VERSION#v}"
     CHANNEL="v${ver}"
-    ASSET="${BINARY}_${ver}_${OS}_${ARCH}.tar.gz"
+    ASSET="${PKG}_${ver}_${OS}_${ARCH}.tar.gz"
   else
     CHANNEL="latest"
-    ASSET="${BINARY}_${OS}_${ARCH}.tar.gz"
+    ASSET="${PKG}_${OS}_${ARCH}.tar.gz"
     ver="$($DL "${BASE_URL}/latest/VERSION" 2>/dev/null | head -n1 || true)"
   fi
   BASE="${BASE_URL}/${CHANNEL}"
@@ -119,7 +120,7 @@ else
     [ -n "$ver" ] || die "could not determine the latest release from ${GH}/latest
      Pin a version with MCPZERO_VERSION=<x.y.z>, or see https://mcpzero.io/docs/cli/install/"
   fi
-  ASSET="${BINARY}_${ver}_${OS}_${ARCH}.tar.gz"
+  ASSET="${PKG}_${ver}_${OS}_${ARCH}.tar.gz"
   URL="${GH}/download/v${ver}/${ASSET}"
   SUMS_URL="${GH}/download/v${ver}/SHA256SUMS"
 fi

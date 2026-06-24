@@ -18,7 +18,7 @@ import zipfile
 from importlib import metadata
 from pathlib import Path
 
-# GitHub Release assets: <base>/v<version>/mcpzero_<version>_<os>_<arch>.<ext>
+# GitHub Release assets: <base>/v<version>/mcpzero-cli_<version>_<os>_<arch>.<ext>
 BASE_URL = os.environ.get(
     "MCPZERO_BASE_URL", "https://github.com/mcpzero/mcpzero/releases/download"
 ).rstrip("/")
@@ -63,7 +63,7 @@ def _ensure_binary() -> Path:
         return dest
 
     ext = "zip" if os_name == "windows" else "tar.gz"
-    asset = f"mcpzero_{version}_{os_name}_{arch}.{ext}"
+    asset = f"mcpzero-cli_{version}_{os_name}_{arch}.{ext}"
     url = f"{BASE_URL}/v{version}/{asset}"
 
     with tempfile.TemporaryDirectory() as tmp:

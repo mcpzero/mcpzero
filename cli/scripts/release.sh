@@ -7,13 +7,13 @@
 #
 # Layout published per release (VERSION = 0.1.0 → tag v0.1.0):
 #
-#   dl/v0.1.0/mcpzero_0.1.0_darwin_arm64.tar.gz   (binary named `mcpzero`)
-#   dl/v0.1.0/mcpzero_0.1.0_darwin_amd64.tar.gz
-#   dl/v0.1.0/mcpzero_0.1.0_linux_amd64.tar.gz
-#   dl/v0.1.0/mcpzero_0.1.0_linux_arm64.tar.gz
-#   dl/v0.1.0/mcpzero_0.1.0_windows_amd64.zip
+#   dl/v0.1.0/mcpzero-cli_0.1.0_darwin_arm64.tar.gz   (binary named `mcpzero`)
+#   dl/v0.1.0/mcpzero-cli_0.1.0_darwin_amd64.tar.gz
+#   dl/v0.1.0/mcpzero-cli_0.1.0_linux_amd64.tar.gz
+#   dl/v0.1.0/mcpzero-cli_0.1.0_linux_arm64.tar.gz
+#   dl/v0.1.0/mcpzero-cli_0.1.0_windows_amd64.zip
 #   dl/v0.1.0/SHA256SUMS
-#   dl/latest/mcpzero_<os>_<arch>.tar.gz          (versionless copies)
+#   dl/latest/mcpzero-cli_<os>_<arch>.tar.gz          (versionless copies)
 #   dl/latest/SHA256SUMS
 #   dl/latest/VERSION                              (plain text, e.g. "0.1.0")
 #
@@ -36,6 +36,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)" # cli repo root
 DIST="$ROOT/dist"
 STAGE="$DIST/release"
+
+# Archive (tarball/zip) base name. The binary packed inside stays `mcpzero`.
+PKG="mcpzero-cli"
 
 SKIP_BUILD="${SKIP_BUILD:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -114,16 +117,16 @@ for entry in $PLATFORMS; do
     work="$pkgtmp/$osarch"
     mkdir -p "$work"
     cp "$src" "$work/mcpzero.exe"
-    versioned="mcpzero_${VERSION}_${osarch}.zip"
-    latest="mcpzero_${osarch}.zip"
+    versioned="${PKG}_${VERSION}_${osarch}.zip"
+    latest="${PKG}_${osarch}.zip"
     (cd "$work" && zip -q -X "$STAGE/$TAG/$versioned" mcpzero.exe)
   else
     work="$pkgtmp/$osarch"
     mkdir -p "$work"
     cp "$src" "$work/mcpzero"
     chmod +x "$work/mcpzero"
-    versioned="mcpzero_${VERSION}_${osarch}.tar.gz"
-    latest="mcpzero_${osarch}.tar.gz"
+    versioned="${PKG}_${VERSION}_${osarch}.tar.gz"
+    latest="${PKG}_${osarch}.tar.gz"
     tar -czf "$STAGE/$TAG/$versioned" -C "$work" mcpzero
   fi
   cp "$STAGE/$TAG/$versioned" "$STAGE/latest/$latest"
@@ -131,8 +134,8 @@ for entry in $PLATFORMS; do
 done
 
 # ---- checksums + version pointer --------------------------------------------
-( cd "$STAGE/$TAG"   && $SHACMD mcpzero_* > SHA256SUMS )
-( cd "$STAGE/latest" && $SHACMD mcpzero_* > SHA256SUMS )
+( cd "$STAGE/$TAG"   && $SHACMD "${PKG}"_* > SHA256SUMS )
+( cd "$STAGE/latest" && $SHACMD "${PKG}"_* > SHA256SUMS )
 printf '%s\n' "$VERSION" > "$STAGE/latest/VERSION"
 ok "generated SHA256SUMS + VERSION"
 
@@ -140,7 +143,7 @@ ok "generated SHA256SUMS + VERSION"
 # Keeps homebrew-tap pinned to this release (R2 URLs + matching sha256).
 FORMULA="$HOMEBREW_TAP_DIR/Formula/mcpzero.rb"
 sha_for() {
-  grep " .mcpzero_${VERSION}_$1\.tar\.gz\$" "$STAGE/$TAG/SHA256SUMS" \
+  grep " .${PKG}_${VERSION}_$1\.tar\.gz\$" "$STAGE/$TAG/SHA256SUMS" \
     | awk '{print $1}' | head -n1
 }
 if [ "${SKIP_FORMULA:-0}" = "1" ]; then
@@ -233,5 +236,5 @@ Verify:
   curl -fsSL https://mcpzero.io/install.sh | sh
 
 Pinned download:
-  https://mcpzero.io/dl/$TAG/mcpzero_${VERSION}_darwin_arm64.tar.gz
+  https://mcpzero.io/dl/$TAG/mcpzero-cli_${VERSION}_darwin_arm64.tar.gz
 EOF
