@@ -6,11 +6,11 @@ hero:
   tagline: MCP routing infrastructure for developers shipping local MCP servers to Cursor and other AI clients.
   actions:
     - text: Get started
-      link: /getting-started/overview/
+      link: /docs/getting-started/overview/
       icon: right-arrow
       variant: primary
     - text: Install CLI
-      link: /cli/install/
+      link: /docs/cli/install/
       icon: external
       variant: minimal
     - text: Open Dashboard
