@@ -34,8 +34,6 @@ building from source and the full command reference.
 ```bash
 npm install mcpzero-sdk          # TypeScript
 pip install mcpzero-sdk          # Python
-cargo add mcpzero-sdk            # Rust
-go get github.com/mcpzero/sdk-go # Go
 ```
 
 ## Repositories
@@ -43,11 +41,8 @@ go get github.com/mcpzero/sdk-go # Go
 | Repo | What | License |
 |------|------|---------|
 | [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
-| [`cli/`](./cli/) | `mcpzero` tunnel client (Go) — part of this repo | OSS |
 | [`sdk-ts`](https://github.com/mcpzero/sdk-ts) | TypeScript SDK — npm `mcpzero-sdk` | MIT |
-| [`sdk-go`](https://github.com/mcpzero/sdk-go) | Go SDK — `github.com/mcpzero/sdk-go` | MIT |
 | [`sdk-py`](https://github.com/mcpzero/sdk-py) | Python SDK — PyPI `mcpzero-sdk` | MIT |
-| [`sdk-rust`](https://github.com/mcpzero/sdk-rust) | Rust SDK — crate `mcpzero-sdk` | MIT |
 | [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero` | — |
 
 ## Documentation

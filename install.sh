@@ -185,14 +185,54 @@ else
   die "cannot write to install dir and sudo is unavailable — set MCPZERO_INSTALL_DIR to a writable directory"
 fi
 
-ok "installed ${BOLD}${BINARY}${RESET} → ${DEST}/${BINARY}"
+ok "installed ${BOLD}${BINARY}${RESET}"
+printf '%s\n' "    ${DIM}location:${RESET} ${BOLD}${DEST}/${BINARY}${RESET}"
 
 # ---- PATH hint ---------------------------------------------------------------
+# Print shell-specific instructions for adding $DEST to PATH plus the command
+# to activate it in the current session, so users don't have to open a new
+# terminal after installing.
+print_path_help() {
+  _shell="$(basename "${SHELL:-sh}")"
+  printf '\n%s\n' "${YELLOW}!${RESET} ${BOLD}${DEST}${RESET} is not on your PATH yet."
+  printf '%s\n\n' "  Add it for your shell, then reload (or open a new terminal):"
+
+  case "$_shell" in
+    zsh)
+      printf '  %s\n' "${BOLD}zsh${RESET} ${DIM}(~/.zshrc)${RESET}"
+      printf '    %s\n' "echo 'export PATH=\"$DEST:\$PATH\"' >> ~/.zshrc"
+      printf '    %s\n\n' "source ~/.zshrc        ${DIM}# activate now${RESET}"
+      ;;
+    bash)
+      printf '  %s\n' "${BOLD}bash${RESET} ${DIM}(~/.bashrc, macOS often uses ~/.bash_profile)${RESET}"
+      printf '    %s\n' "echo 'export PATH=\"$DEST:\$PATH\"' >> ~/.bashrc"
+      printf '    %s\n\n' "source ~/.bashrc       ${DIM}# activate now${RESET}"
+      ;;
+    fish)
+      printf '  %s\n' "${BOLD}fish${RESET} ${DIM}(~/.config/fish/config.fish)${RESET}"
+      printf '    %s\n' "fish_add_path $DEST    ${DIM}# persists across sessions${RESET}"
+      printf '    %s\n\n' "set -gx PATH $DEST \$PATH   ${DIM}# activate now${RESET}"
+      ;;
+    *)
+      printf '  %s\n' "${BOLD}bash${RESET} ${DIM}(~/.bashrc)${RESET}"
+      printf '    %s\n' "echo 'export PATH=\"$DEST:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+      printf '  %s\n' "${BOLD}zsh${RESET}  ${DIM}(~/.zshrc)${RESET}"
+      printf '    %s\n' "echo 'export PATH=\"$DEST:\$PATH\"' >> ~/.zshrc && source ~/.zshrc"
+      printf '  %s\n' "${BOLD}fish${RESET}"
+      printf '    %s\n\n' "fish_add_path $DEST"
+      ;;
+  esac
+
+  printf '  %s\n\n' "${DIM}Or run this once for the current session only:${RESET}"
+  printf '    %s\n' "export PATH=\"$DEST:\$PATH\""
+}
+
 case ":$PATH:" in
-  *":$DEST:"*) ;;
+  *":$DEST:"*)
+    ok "$DEST is already on your PATH"
+    ;;
   *)
-    warn "$DEST is not on your PATH. Add it, e.g.:"
-    printf '%s\n' "    export PATH=\"$DEST:\$PATH\""
+    print_path_help
     ;;
 esac
 
