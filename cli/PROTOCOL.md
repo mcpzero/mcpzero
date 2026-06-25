@@ -103,6 +103,30 @@ classification — is the shared protocol.
 
 ---
 
+### Loop detection (`X-MCP-Loop`)
+
+A multiplexed tunnel can proxy an HTTP MCP server whose URL points back at a
+gateway endpoint. To stop a request from looping (client → gateway → tunnel →
+gateway → …), the gateway carries the forwarding chain as a comma-separated list
+of endpoint ids:
+
+1. On each inbound `POST /v1/<endpointId>[/<server>]` the gateway reads the
+   `X-MCP-Loop` request header. If `<endpointId>` already appears in the chain
+   (a self-reference or an A→B→A cycle), or the chain exceeds the hop limit, it
+   rejects the request with `508` and a JSON-RPC error (`code -32002`).
+2. Otherwise it appends `<endpointId>` and forwards the chain to the tunnel,
+   which delivers it on the `mcp_request` as a `loop` field.
+3. The CLI propagates that `loop` value as the `X-MCP-Loop` header on any HTTP
+   upstream it calls, so a loop back to a gateway endpoint is detected on
+   re-entry.
+
+The CLI also performs a **local fast-fail check** at `tunnel start`: if a
+`--mcp-config` HTTP server targets this tunnel's own gateway host + endpoint id,
+it refuses to start (a direct self-reference). The gateway's `X-MCP-Loop`
+backstop covers cross-endpoint and multi-hop cycles the CLI cannot see.
+
+---
+
 ## 3. Public endpoint URLs
 
 After a tunnel registers, buyers reach the server through the gateway:

@@ -48,6 +48,22 @@ You must register an account first at [localhost:8788/app/register](http://local
 | `mcpzero whoami` | Show saved user |
 | `mcpzero logout` | Delete local credentials |
 
+## No browser (containers / remote shells)
+
+If the CLI runs somewhere without a usable browser — a Docker container, an SSH
+session, etc. — the default callback (`http://127.0.0.1:{port}/callback`) can't
+reach the CLI. Use the manual flow:
+
+```bash
+mcpzero login --no-browser
+```
+
+The CLI prints a URL to open on any machine, then waits for you to paste the
+resulting callback URL (or `code=` value) back into the terminal. See
+[Running in a container](/docs/cli/containers/) for the full walkthrough, the
+`docker run --network host` auto-callback option, and the `ca-certificates`
+prerequisite.
+
 ## CI / headless environments
 
 Use an **endpoint tunnel token** instead of browser login:

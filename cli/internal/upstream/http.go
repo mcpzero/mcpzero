@@ -139,6 +139,7 @@ func (h *HTTPUpstream) handleStreamable(ctx context.Context, reqBody []byte, emi
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")
 	h.applyHeaders(req)
+	applyLoopHeader(ctx, req)
 
 	resp, err := h.client.Do(req)
 	if err != nil {
@@ -318,6 +319,7 @@ func (h *HTTPUpstream) handleLegacySSE(ctx context.Context, reqBody []byte, emit
 	}
 	req.Header.Set("Content-Type", "application/json")
 	h.applyHeaders(req)
+	applyLoopHeader(ctx, req)
 
 	resp, err := h.client.Do(req)
 	if err != nil {
@@ -362,6 +364,15 @@ func (h *HTTPUpstream) routeLegacyMessage(msg Message) {
 }
 
 // --- shared helpers ---
+
+// applyLoopHeader propagates the gateway forwarding chain (if any) onto an
+// outbound request so the gateway can detect loops when this HTTP upstream
+// points back at a gateway endpoint.
+func applyLoopHeader(ctx context.Context, req *http.Request) {
+	if trace := loopTraceFromContext(ctx); trace != "" {
+		req.Header.Set(LoopHeader, trace)
+	}
+}
 
 func (h *HTTPUpstream) applyHeaders(req *http.Request) {
 	for _, hd := range h.headers {

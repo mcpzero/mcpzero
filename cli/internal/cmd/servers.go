@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -14,6 +15,62 @@ import (
 // onStartFunc returns the onStart callback for a given server name (used to
 // record the stdio process-group pid). It may return nil.
 type onStartFunc func(name string) func(pid int)
+
+// checkSelfReference rejects a config whose HTTP server points back at this
+// tunnel's own gateway endpoint. Such an entry would make the gateway forward a
+// request to this tunnel, which forwards it right back to the same endpoint —
+// an infinite request loop. We only flag a direct self-reference (same gateway
+// host + same endpoint id); pointing at a *different* endpoint is a legitimate
+// chained proxy. The gateway enforces a runtime backstop (X-MCP-Loop) for
+// cross-endpoint and multi-hop cycles this static check cannot see.
+func checkSelfReference(gwBase, endpointID string, specs []mcpconfig.ServerSpec) error {
+	gwURL, err := url.Parse(gwBase)
+	if err != nil || gwURL.Hostname() == "" {
+		// Best-effort: if we can't resolve the gateway host, skip the check.
+		return nil
+	}
+	for _, spec := range specs {
+		if !spec.IsHTTP() {
+			continue
+		}
+		u, err := url.Parse(spec.URL)
+		if err != nil {
+			continue
+		}
+		if !strings.EqualFold(u.Hostname(), gwURL.Hostname()) {
+			continue
+		}
+		if endpointFromPath(u.Path) != endpointID {
+			continue
+		}
+		return fmt.Errorf(
+			"server %q (%s) points back at this tunnel's own endpoint %s; "+
+				"the gateway would forward requests to this tunnel and straight back "+
+				"to the same endpoint, an infinite loop. Remove this entry from the "+
+				"config, or point it at a different endpoint.",
+			spec.RawName, spec.URL, endpointID,
+		)
+	}
+	return nil
+}
+
+// endpointFromPath extracts the endpoint id from a gateway MCP URL path,
+// supporting both the canonical /v1/<id>[/<server>] and the legacy
+// /v1/endpoints/<id>[/<server>] forms. Returns "" when the path is not a
+// gateway MCP path.
+func endpointFromPath(p string) string {
+	parts := strings.Split(strings.Trim(p, "/"), "/")
+	if len(parts) < 2 || parts[0] != "v1" {
+		return ""
+	}
+	if parts[1] == "endpoints" {
+		if len(parts) < 3 {
+			return ""
+		}
+		return parts[2]
+	}
+	return parts[1]
+}
 
 // namedUpstreamsFromSpecs builds tunnel upstreams from selected config specs.
 func namedUpstreamsFromSpecs(

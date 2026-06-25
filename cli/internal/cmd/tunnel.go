@@ -145,6 +145,10 @@ func tunnelStart(args []string) error {
 		return err
 	}
 
+	if err := checkSelfReference(resolvedGWBase, *endpointID, selectedServers); err != nil {
+		return err
+	}
+
 	p := startParams{
 		endpointID:   *endpointID,
 		mcpCmd:       *mcpCmd,

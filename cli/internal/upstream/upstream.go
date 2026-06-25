@@ -42,6 +42,32 @@ type Header struct {
 	Value string
 }
 
+// LoopHeader carries the gateway forwarding chain (comma-separated endpoint
+// ids) so the gateway can detect request loops. The CLI propagates the value it
+// received on an mcp_request to any HTTP upstream it calls, letting the gateway
+// see its own endpoint reappear in the chain.
+const LoopHeader = "X-MCP-Loop"
+
+type loopCtxKey struct{}
+
+// WithLoopTrace returns a context carrying the gateway forwarding chain for the
+// current request. An empty trace leaves the context unchanged.
+func WithLoopTrace(ctx context.Context, trace string) context.Context {
+	if trace == "" {
+		return ctx
+	}
+	return context.WithValue(ctx, loopCtxKey{}, trace)
+}
+
+// loopTraceFromContext returns the forwarding chain stored by WithLoopTrace, or
+// "" if none is set.
+func loopTraceFromContext(ctx context.Context) string {
+	if v, ok := ctx.Value(loopCtxKey{}).(string); ok {
+		return v
+	}
+	return ""
+}
+
 var envRef = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)\}`)
 
 // ParseHeader parses a "Name: Value" header flag and resolves ${ENV}

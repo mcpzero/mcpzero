@@ -132,6 +132,10 @@ type mcpRequestMessage struct {
 	ID     string `json:"id"`
 	Body   string `json:"body"`
 	Server string `json:"server,omitempty"`
+	// Loop carries the gateway forwarding chain (comma-separated endpoint ids).
+	// The CLI propagates it to any HTTP upstream so the gateway can detect a
+	// request loop when an upstream points back at a gateway endpoint.
+	Loop string `json:"loop,omitempty"`
 }
 
 type mcpStreamChunkMessage struct {
@@ -657,6 +661,7 @@ func (c *Client) handleRequest(ctx context.Context, out chan []byte, req mcpRequ
 		return
 	}
 
+	ctx = upstream.WithLoopTrace(ctx, req.Loop)
 	err := up.Handle(ctx, []byte(req.Body), emit)
 	if err != nil && ctx.Err() == nil {
 		end.Error = err.Error()

@@ -19,6 +19,30 @@ sudo mv ./mcpzero-darwin-arm64 /usr/local/bin/mcpzero
 - Disable VPN/proxy blocking `127.0.0.1` callbacks
 - Retry: `mcpzero logout && mcpzero login`
 
+## Login in a Docker container or remote shell
+
+`mcpzero login` can't open a browser, and the callback
+`http://127.0.0.1:{port}/callback` points at the wrong machine. Use
+`mcpzero login --no-browser` (paste the code back) — see
+[Running in a container](/docs/cli/containers/) for the full walkthrough.
+
+## `tls: failed to verify certificate: ... unknown authority`
+
+The machine is missing root CA certificates (common in minimal container images),
+so the CLI can't verify the TLS certificate of `mcpzero.io`. Install the CA bundle
+and retry:
+
+```bash
+# Debian/Ubuntu
+apt-get update && apt-get install -y ca-certificates
+# Alpine
+apk add --no-cache ca-certificates
+# RHEL/Fedora
+dnf install -y ca-certificates
+```
+
+See [Running in a container](/docs/cli/containers/) for the complete container guide.
+
 ## `register rejected: invalid_token`
 
 - **Logged in?** Run `mcpzero whoami`. The endpoint must belong to your user.

@@ -16,6 +16,7 @@ func login(args []string) error {
 	fs := flag.NewFlagSet("login", flag.ExitOnError)
 	webBase := fs.String("web-base", config.DefaultWebBase, "MCPZERO web base URL")
 	gwBase := fs.String("gw-base", config.DefaultGWBase, "MCPZERO gateway base URL")
+	noBrowser := fs.Bool("no-browser", false, "Do not open a browser; print a URL and paste the callback code back (for containers/remote shells)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -24,8 +25,9 @@ func login(args []string) error {
 	defer stop()
 
 	creds, err := auth.Login(ctx, auth.LoginOptions{
-		WebBase: *webBase,
-		GWBase:  *gwBase,
+		WebBase:   *webBase,
+		GWBase:    *gwBase,
+		NoBrowser: *noBrowser,
 	})
 	if err != nil {
 		return err

@@ -5,6 +5,13 @@ description: Download and install the mcpzero CLI binary for macOS, Linux, and W
 
 The `mcpzero` CLI is distributed as a **pre-built binary**. You do not need Go installed.
 
+## Requirements
+
+The CLI needs **root CA certificates** to reach `mcpzero.io` over HTTPS. Desktop
+macOS and most Linux distros already have them, but **minimal container images do
+not** — there, install `ca-certificates` first. See
+[Running in a container](/docs/cli/containers/) for details.
+
 ## Get started
 
 Install the latest CLI for macOS or Linux with a single command:
