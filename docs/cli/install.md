@@ -60,18 +60,18 @@ release is also pinned under `/dl/v<version>/`.
 
 | Platform | Latest archive |
 |----------|----------------|
-| macOS Apple Silicon | [`/dl/latest/mcpzero_darwin_arm64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero_darwin_arm64.tar.gz) |
-| macOS Intel | [`/dl/latest/mcpzero_darwin_amd64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero_darwin_amd64.tar.gz) |
-| Linux ARM64 | [`/dl/latest/mcpzero_linux_arm64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero_linux_arm64.tar.gz) |
-| Linux x86_64 | [`/dl/latest/mcpzero_linux_amd64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero_linux_amd64.tar.gz) |
-| Windows x86_64 | [`/dl/latest/mcpzero_windows_amd64.zip`](https://mcpzero.io/dl/latest/mcpzero_windows_amd64.zip) |
+| macOS Apple Silicon | [`/dl/latest/mcpzero-cli_darwin_arm64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero-cli_darwin_arm64.tar.gz) |
+| macOS Intel | [`/dl/latest/mcpzero-cli_darwin_amd64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero-cli_darwin_amd64.tar.gz) |
+| Linux ARM64 | [`/dl/latest/mcpzero-cli_linux_arm64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero-cli_linux_arm64.tar.gz) |
+| Linux x86_64 | [`/dl/latest/mcpzero-cli_linux_amd64.tar.gz`](https://mcpzero.io/dl/latest/mcpzero-cli_linux_amd64.tar.gz) |
+| Windows x86_64 | [`/dl/latest/mcpzero-cli_windows_amd64.zip`](https://mcpzero.io/dl/latest/mcpzero-cli_windows_amd64.zip) |
 
 Checksums are at [`/dl/latest/SHA256SUMS`](https://mcpzero.io/dl/latest/SHA256SUMS); the current version string is at [`/dl/latest/VERSION`](https://mcpzero.io/dl/latest/VERSION).
 
 Then extract, make it executable, and move it onto your PATH:
 
 ```bash
-curl -fsSL https://mcpzero.io/dl/latest/mcpzero_darwin_arm64.tar.gz | tar -xz
+curl -fsSL https://mcpzero.io/dl/latest/mcpzero-cli_darwin_arm64.tar.gz | tar -xz
 chmod +x mcpzero
 sudo mv mcpzero /usr/local/bin/mcpzero
 mcpzero version
