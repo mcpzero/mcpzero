@@ -34,7 +34,7 @@ func login(args []string) error {
 	}
 
 	fmt.Fprintf(os.Stdout, "Login successful as %s (%s)\n", creds.Email, creds.UserID)
-	fmt.Fprintf(os.Stdout, "Credentials saved. You can now run tunnel start without --token.\n")
+	fmt.Fprintf(os.Stdout, "Credentials saved. You can now run tunnel start without --mgmt-key.\n")
 	return nil
 }
 

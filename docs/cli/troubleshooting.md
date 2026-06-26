@@ -46,7 +46,7 @@ See [Running in a container](/docs/cli/containers/) for the complete container g
 ## `register rejected: invalid_token`
 
 - **Logged in?** Run `mcpzero whoami`. The endpoint must belong to your user.
-- **Using `--token`?** Regenerate the tunnel token in Dashboard if expired or rotated.
+- **Using `--mgmt-key`?** Regenerate the management key in Dashboard if expired or revoked.
 - **Wrong endpoint ID?** Copy the ID from [Dashboard → Endpoints](/app/endpoints).
 
 ## `register rejected: endpoint_not_owned`

@@ -78,7 +78,7 @@ the credential the CLI presents when opening a tunnel (below).
 
 The tunnel WebSocket wire protocol (`wss://<gw>/tunnel/<endpointId>`, register /
 `mcp_request` / streaming / reconnect / disconnect classification) is **identical
-to the SDKs** and specified once in this repo's top-level
+for every tunnel client** and specified once in this repo's top-level
 [`PROTOCOL.md`](../PROTOCOL.md) (tunnel protocol v2). Do not duplicate it here —
 link to it.
 
@@ -92,10 +92,11 @@ The only CLI-specific difference is **authentication on `register`**:
   ```
 
   The gateway validates the refresh token, resolves the user, and authorizes the
-  endpoint. This is why `mcpzero tunnel` does not need a per-endpoint token.
+  endpoint. This is why the logged-in CLI needs no separate credential.
 
-- **SDKs** instead send a per-endpoint tunnel `token` field. The gateway accepts
-  either form on the same `register` message.
+- The gateway also accepts a user-level **management key**
+  (`auth: { type: "management", token }`) on the same `register` message — what
+  `mcpzero tunnel --mgmt-key` sends for headless/CI use without `mcpzero login`.
 
 Everything else on the wire — `register_ok`, `mcp_request`, `mcp_stream_chunk`,
 `mcp_stream_end`, `mcp_event`, `mcp_cancel`, `ping`/`pong`, close-code

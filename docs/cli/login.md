@@ -3,7 +3,7 @@ title: Login
 description: Authenticate the CLI with your MCPZERO account using a browser flow.
 ---
 
-`mcpzero login` opens your browser, completes Dashboard authentication, and saves a **refresh token** locally. After login, `tunnel start` does not require `--token`.
+`mcpzero login` opens your browser, completes Dashboard authentication, and saves a **refresh token** locally. After login, `tunnel start` does not require `--mgmt-key`.
 
 ## Quick start
 
@@ -66,16 +66,18 @@ prerequisite.
 
 ## CI / headless environments
 
-Use an **endpoint tunnel token** instead of browser login:
+Use a **management key** instead of browser login. Pass it with `--mgmt-key`, or
+set `MCPZERO_MGMT_KEY` in the environment:
 
 ```bash
 mcpzero tunnel start \
   --endpoint ep_abc \
-  --token tt_your_tunnel_token \
+  --mgmt-key mzm_your_management_key \
   --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp"
 ```
 
-Copy the tunnel token from Dashboard when creating an endpoint (shown once).
+Create a management key in the Dashboard under **Management Keys** (shown once).
+A single key can register a tunnel for any endpoint you own.
 
 ## Next
 

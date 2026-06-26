@@ -26,9 +26,14 @@ type NamedUpstream struct {
 }
 
 type Client struct {
-	GWBase       string
-	EndpointID   string
-	Token        string
+	GWBase     string
+	EndpointID string
+	// MgmtKey is a user-level management key (MCPZERO_MGMT_KEY). When set it is
+	// sent as auth { type: "management" }, registering a tunnel for any endpoint
+	// the key's owner controls — the headless alternative to `mcpzero login`.
+	MgmtKey string
+	// RefreshToken comes from `mcpzero login` and is sent as
+	// auth { type: "cli_refresh" }. Used when no MgmtKey is provided.
 	RefreshToken string
 
 	// Upstream is a single, unnamed MCP server this tunnel proxies (the legacy
@@ -96,7 +101,10 @@ func backoffForAttempt(attempt int) time.Duration {
 	return reconnectCapBackoff
 }
 
-type cliRefreshAuth struct {
+// registerAuth is the `auth` object on the register message. Both supported
+// credential types share the same { type, token } shape: "management" (a
+// user-level management key) and "cli_refresh" (a `mcpzero login` refresh token).
+type registerAuth struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
 }
@@ -110,13 +118,12 @@ type registerServerInfo struct {
 }
 
 type registerMessage struct {
-	Type            string          `json:"type"`
-	EndpointID      string          `json:"endpointId"`
-	Token           string          `json:"token,omitempty"`
-	Auth            *cliRefreshAuth `json:"auth,omitempty"`
-	ProtocolVersion int             `json:"protocolVersion"`
-	Transport       string          `json:"transport,omitempty"`
-	Capabilities    []string        `json:"capabilities,omitempty"`
+	Type            string        `json:"type"`
+	EndpointID      string        `json:"endpointId"`
+	Auth            *registerAuth `json:"auth,omitempty"`
+	ProtocolVersion int           `json:"protocolVersion"`
+	Transport       string        `json:"transport,omitempty"`
+	Capabilities    []string      `json:"capabilities,omitempty"`
 	// Servers lists the named MCP servers multiplexed over this tunnel. Empty
 	// for a single-server tunnel. Kept as a plain name list for routing and
 	// backward compatibility with older gateways.
@@ -531,10 +538,11 @@ func (c *Client) register(conn *websocket.Conn) error {
 		ServerInfos:     c.serverInfos(),
 		Capabilities:    []string{"streaming"},
 	}
-	if c.RefreshToken != "" {
-		msg.Auth = &cliRefreshAuth{Type: "cli_refresh", Token: c.RefreshToken}
-	} else {
-		msg.Token = c.Token
+	switch {
+	case c.MgmtKey != "":
+		msg.Auth = &registerAuth{Type: "management", Token: c.MgmtKey}
+	case c.RefreshToken != "":
+		msg.Auth = &registerAuth{Type: "cli_refresh", Token: c.RefreshToken}
 	}
 
 	if err := conn.WriteJSON(msg); err != nil {

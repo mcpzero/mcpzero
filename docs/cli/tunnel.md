@@ -12,7 +12,7 @@ machine — including ones that require an auth token).
 
 - A registered MCPZERO account
 - An [endpoint created](/app/endpoints) in the Dashboard (note the endpoint ID, e.g. `ep_dev`)
-- CLI logged in (`mcpzero login`) **or** a tunnel token for `--token`
+- CLI logged in (`mcpzero login`) **or** a management key for `--mgmt-key`
 
 ## Start tunnel (stdio)
 
@@ -55,7 +55,7 @@ returns `text/event-stream` to clients that send `Accept: text/event-stream`.
 | `--mcp-url` | One of | URL of an HTTP MCP server to proxy |
 | `--mcp-header` | No | HTTP header for `--mcp-url` (repeatable), e.g. `"Authorization: Bearer ${TOKEN}"` |
 | `--mcp-transport` | No | HTTP transport: `auto` (default), `streamable-http`, or `sse` (legacy) |
-| `--token` | No* | Tunnel token (CI/headless). Omit when logged in. |
+| `--mgmt-key` | No* | Management key for CI/headless (or set `MCPZERO_MGMT_KEY`). Omit when logged in. |
 | `--gw-base` | No | Gateway URL (default `https://gw.mcpzero.io`) |
 | `--detach`, `-d` | No | Run the tunnel in the background as a managed daemon |
 | `--force`, `-f` | No | Start even if another tunnel is already running for this endpoint |
@@ -70,7 +70,7 @@ Exactly one of `--mcp-cmd` or `--mcp-url` is required.
 > first (`mcpzero tunnel rm -f <id>`), use a different `--endpoint`, or pass
 > `--force` to override.
 
-\* After `mcpzero login`, the CLI sends a refresh token on register instead of `--token`.
+\* After `mcpzero login`, the CLI sends a refresh token on register instead of `--mgmt-key`.
 
 ### Upstream auth & secrets
 
@@ -111,7 +111,7 @@ Use seed endpoint `ep_dev` after applying dev migrations (see repo `docs/phase1-
 ## What happens under the hood
 
 1. CLI dials `wss://gw.mcpzero.io/tunnel/{endpointId}`
-2. Sends `register` with CLI refresh token or tunnel token (plus the upstream transport)
+2. Sends `register` with CLI refresh token or management key (plus the upstream transport)
 3. Gateway validates ownership and marks endpoint **online**
 4. MCP requests from clients are forwarded over WebSocket → CLI → local stdio/HTTP MCP server → streamed back as response chunks
 

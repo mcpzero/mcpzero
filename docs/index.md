@@ -24,4 +24,3 @@ hero:
 - **Tunnel local MCP** — Run `mcpzero tunnel start` to expose a stdio MCP server through the MCPZERO gateway.
 - **Protect with API keys** — Buyers call your endpoint with `Authorization: Bearer <mz_live_api_key>`. Keys are managed in the Dashboard.
 - **Observe every tool call** — The gateway records tool name, latency, payloads, and auth failures in the call ledger.
-- **Tunnel from your code** — Use `mcpzero-sdk` to expose your MCP server through the tunnel directly from code — TypeScript, Python, Go, and Rust.

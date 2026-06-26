@@ -94,4 +94,4 @@ curl -s https://gw.mcpzero.io/v1/ep_abc123/postgres \
 ## Related
 
 - [Cursor setup](/docs/cli/cursor/)
-- [Tunnel SDK](/docs/sdk/overview/)
+- [Tunnel](/docs/cli/tunnel/)

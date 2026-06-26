@@ -76,15 +76,16 @@ docker run --network host -it ubuntu:22.04
 > This does **not** apply to Docker Desktop on macOS/Windows, where containers run
 > in a VM and don't share the host's loopback. Use `--no-browser` there.
 
-### Headless / CI: tunnel token (no login)
+### Headless / CI: management key (no login)
 
-For unattended runs, skip browser login entirely and pass an endpoint **tunnel
-token** (created once in the Dashboard):
+For unattended runs, skip browser login entirely and pass a **management key**
+(created once in the Dashboard under **Management Keys**). Use `--mgmt-key`, or
+set `MCPZERO_MGMT_KEY` in the environment:
 
 ```bash
 mcpzero tunnel start \
   --endpoint ep_abc \
-  --token tt_your_tunnel_token \
+  --mgmt-key mzm_your_management_key \
   --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp"
 ```
 
@@ -104,8 +105,8 @@ RUN apt-get update \
 RUN curl -fsSL https://mcpzero.io/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Authenticate non-interactively at runtime with a tunnel token, e.g.:
-#   docker run -e MCPZERO_TUNNEL_TOKEN=tt_... your-image
+# Authenticate non-interactively at runtime with a management key, e.g.:
+#   docker run -e MCPZERO_MGMT_KEY=mzm_... your-image
 CMD ["mcpzero", "version"]
 ```
 

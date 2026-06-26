@@ -13,9 +13,9 @@ import (
 // InternalRunCommand is the hidden subcommand the detached child runs.
 const InternalRunCommand = "__daemon-run"
 
-// TokenEnvVar passes a raw tunnel token to the detached child without
+// MgmtKeyEnvVar passes a management key to the detached child without
 // persisting it to disk.
-const TokenEnvVar = "MCPZERO_DAEMON_TOKEN"
+const MgmtKeyEnvVar = "MCPZERO_DAEMON_MGMT_KEY"
 
 // ServerSpec describes one named MCP server to multiplex over a tunnel. Env and
 // MCPHeaders carry resolved plaintext values (encrypted before persisting).
@@ -42,7 +42,7 @@ type SpawnConfig struct {
 	// tunnel (the --mcp-config form) instead of the single MCPCmd/MCPURL.
 	Servers []ServerSpec
 	GWBase  string
-	Token   string // raw tunnel token (optional); passed via env, never persisted
+	MgmtKey string // management key (optional); passed via env, never persisted
 }
 
 // Supported reports whether background tunnels work on this platform.
@@ -110,8 +110,8 @@ func Start(cfg SpawnConfig) (*State, error) {
 	cmd.Stdin = nil
 	cmd.SysProcAttr = detachSysProcAttr()
 	cmd.Env = os.Environ()
-	if cfg.Token != "" {
-		cmd.Env = append(cmd.Env, TokenEnvVar+"="+cfg.Token)
+	if cfg.MgmtKey != "" {
+		cmd.Env = append(cmd.Env, MgmtKeyEnvVar+"="+cfg.MgmtKey)
 	}
 
 	if err := cmd.Start(); err != nil {

@@ -1,8 +1,9 @@
 # MCPZERO Tunnel Protocol v2
 
 This is the single source-of-truth specification for the tunnel wire protocol
-that every language SDK implements. It is derived from the reference Go client
-and the gateway implementation; keep all ports in sync with this document.
+that every tunnel client implements. It is derived from the reference Go client
+(the `mcpzero` CLI) and the gateway implementation; keep all ports in sync with
+this document.
 
 The tunnel lets a developer expose a local/in-process MCP server through the
 MCPZERO gateway, which gives it a public Streamable-HTTP endpoint and full
@@ -10,20 +11,20 @@ dashboard visibility — without configuring domains, TLS, or the CLI.
 
 ## 1. Transport
 
-- The SDK opens a **single WebSocket** connection to the gateway:
+- The client opens a **single WebSocket** connection to the gateway:
   - `wss://<gw-host>/tunnel/<endpointId>` (use `ws://` when the gateway base is
     `http://`, e.g. local dev).
   - The gateway base defaults to `https://gw.mcpzero.io`.
 - All messages are **text frames** containing a single JSON object with a
   `"type"` discriminator.
-- The connection is **long-lived**. The SDK is the dialer; the gateway is the
+- The connection is **long-lived**. The client is the dialer; the gateway is the
   acceptor. The gateway keeps **one active tunnel per endpoint** and evicts the
   previous one when a new tunnel registers (see §6).
 
 ## 2. Lifecycle
 
 ```
-SDK                                   Gateway
+Client                                Gateway
  |  --- WS connect /tunnel/<id> ---->  |
  |  --- register ------------------->  |
  |  <-- register_ok ----------------   |   (or `error`)
@@ -43,17 +44,17 @@ SDK                                   Gateway
 
 ```
 PROTOCOL_VERSION       = 2
-SUPPORTED_VERSIONS     = [1, 2]   // gateway accepts both; SDKs send 2
+SUPPORTED_VERSIONS     = [1, 2]   // gateway accepts both; clients send 2
 ```
 
 v1 was synchronous request/response (`mcp_request` -> `mcp_response`). v2 adds
 streaming (`mcp_stream_chunk` / `mcp_stream_end`), server-initiated messages
 (`mcp_event`), cancellation (`mcp_cancel`), and a `transport` hint on register.
-SDKs always speak v2.
+Clients always speak v2.
 
 ## 4. Messages
 
-### 4.1 SDK -> Gateway
+### 4.1 Client -> Gateway
 
 **register** — first message after connect.
 
@@ -61,9 +62,8 @@ SDKs always speak v2.
 {
   "type": "register",
   "endpointId": "ep_...",        // required
-  // Authenticate with EXACTLY ONE of `auth` (preferred) or `token`:
+  // Authenticate in `auth` (see §7 for the accepted credential types):
   "auth": { "type": "management", "token": "mzm_..." }, // user-level management key
-  // "token": "<tunnel-token>",  // legacy per-endpoint token from the dashboard
   "protocolVersion": 2,
   "transport": "stdio",          // hint: the upstream's wire transport
   "capabilities": ["streaming"],
@@ -80,10 +80,9 @@ SDKs always speak v2.
   reply per request, no out-of-band HTTP semantics).
 - `servers` / `serverInfos` are only present for a multiplexed tunnel. A
   single in-process server omits both and relies on the top-level `transport`.
-- Authenticate with **exactly one** credential: a user-level **management key**
-  in `auth` (`{ "type": "management", "token": "mzm_..." }`, preferred) **or** a
-  legacy per-endpoint **tunnel token** in the plain `token` field. The CLI may
-  instead send `"auth": { "type": "cli_refresh", "token": ... }`.
+- Authenticate in `auth` with a user-level **management key**
+  (`{ "type": "management", "token": "mzm_..." }`). The CLI instead sends
+  `"auth": { "type": "cli_refresh", "token": ... }` (see §7).
 
 **mcp_stream_chunk** — one response message for an in-flight request.
 
@@ -109,7 +108,7 @@ SDKs always speak v2.
 { "type": "ping" }
 ```
 
-### 4.2 Gateway -> SDK
+### 4.2 Gateway -> Client
 
 - **register_ok** `{ "type": "register_ok", "protocolVersion": 2 }` — registration accepted.
 - **error** `{ "type": "error", "message": "..." }` — registration rejected (fatal) or a runtime gateway error.
@@ -175,7 +174,7 @@ max attempts: 30, then give up
   close code `1000` (normal) or `1001` (going away). In particular, close code
   `1000` with reason `"replaced_by_new_connection"` means another tunnel
   replaced this one; reconnecting would start an endless mutual-eviction loop,
-  so the SDK must stop terminally.
+  so the client must stop terminally.
 - **Reconnect (transient)**: abnormal closure `1006`, TLS handshake failure,
   service restart `1012`, try-again-later `1013`, or any non-close network read
   error (connection reset, etc.).
@@ -191,27 +190,25 @@ transient/retryable.
 
 ## 7. Authentication
 
-- The SDK authenticates at register with **one** of:
-  - a user-level **management key** in `register.auth`
-    (`{ "type": "management", "token": "mzm_..." }`) — registers a tunnel for any
-    endpoint the user owns (preferred); or
-  - a legacy per-endpoint **tunnel token** in the `register.token` field.
-
-  The gateway validates either by SHA-256 hash (against `management_keys` or the
-  endpoint record, respectively).
+- The client authenticates at register with a user-level **management key** in
+  `register.auth` (`{ "type": "management", "token": "mzm_..." }`) — it registers
+  a tunnel for any endpoint the user owns. The gateway validates it by SHA-256
+  hash against `management_keys`.
+  - The `mcpzero` CLI instead sends `{ "type": "cli_refresh", "token": ... }`
+    (the refresh token from `mcpzero login`); see the CLI contract for details.
 - `endpointId` and the management key are obtained from the MCPZERO dashboard.
-- Recommended env var convention across SDKs:
+- Recommended env var convention across clients:
   - `MCPZERO_ENDPOINT_ID`
-  - `MCPZERO_MGMT_KEY` (preferred); `MCPZERO_TUNNEL_TOKEN` (legacy)
+  - `MCPZERO_MGMT_KEY`
   - `MCPZERO_GW_BASE` (optional; defaults to `https://gw.mcpzero.io`)
 
 ## 8. Visibility
 
 In tunnel mode, **visibility is produced by the gateway automatically**: every
 client call traverses `/v1/<id>` and is logged to the observability
-ledger (`visibility_source: "gateway"`). The SDK does **not** need to push trace
-events while tunneling — the dashboard reflects calls exactly as it does for the
-CLI tunnel.
+ledger (`visibility_source: "gateway"`). The client does **not** need to push
+trace events while tunneling — the dashboard reflects calls exactly as it does
+for the CLI tunnel.
 
 ## 9. Public endpoint URLs
 
@@ -222,8 +219,9 @@ Once registered, clients reach the server at:
 
 ## 10. Compatibility policy
 
-This protocol is a **public contract** between independently released clients
-(the SDKs and the CLI) and the gateway. Treat it like a versioned API:
+This protocol is a **public contract** between independently released tunnel
+clients (such as the `mcpzero` CLI) and the gateway. Treat it like a versioned
+API:
 
 - **Gateway is backward compatible.** It MUST accept every protocol version in
   `SUPPORTED_VERSIONS` (currently `[1, 2]`), i.e. the current version and at
@@ -236,14 +234,14 @@ This protocol is a **public contract** between independently released clients
   meaning, requires bumping `PROTOCOL_VERSION` — never an in-place break.
 - **Deprecation needs a window.** Before dropping a version from
   `SUPPORTED_VERSIONS`, announce it and leave a grace period long enough for the
-  installed CLI/SDK base to upgrade.
+  installed client base to upgrade.
 - **Releases are decoupled.** Because the gateway stays backward compatible, the
-  gateway, each SDK, and the CLI can ship on their own schedules; a client change
-  does not force a synchronized gateway change (and vice versa).
+  gateway and each client (such as the CLI) can ship on their own schedules; a
+  client change does not force a synchronized gateway change (and vice versa).
 
-The CLI authenticates tunnels differently from the SDKs (it sends
-`auth: { type: "cli_refresh", token }` from `mcpzero login`, whereas SDKs send
-`auth: { type: "management", token }` or a legacy per-endpoint `token`), and it
-also talks to a separate control-plane API for login. That CLI-specific contract
-is documented alongside the CLI; this file is the source of truth for the tunnel
-wire protocol that both share.
+The `register` message authenticates with a user-level management key
+(`auth: { type: "management", token }`); the `mcpzero` CLI instead sends
+`auth: { type: "cli_refresh", token }` from `mcpzero login`. The CLI additionally
+talks to a separate control-plane API for login; that CLI-specific contract is
+documented alongside the CLI. This file is the source of truth for the tunnel
+wire protocol that every client shares.

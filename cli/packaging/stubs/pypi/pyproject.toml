@@ -1,7 +1,7 @@
 [project]
 name = "mcpzero"
 version = "0.0.0"
-description = "Reserved namespace. Install the CLI as mcpzero-cli or the SDK as mcpzero-sdk."
+description = "Reserved namespace. Install the CLI as mcpzero-cli."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.8"
@@ -14,7 +14,6 @@ Homepage = "https://mcpzero.io"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-# Ship a uniquely named module so it never shadows the `mcpzero` import provided
-# by the mcpzero-sdk distribution.
+# Ship a uniquely named module so it never shadows a future `mcpzero` import.
 [tool.hatch.build.targets.wheel]
 packages = ["mcpzero_reserved"]

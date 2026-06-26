@@ -114,7 +114,7 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 	client := Client{
 		GWBase:     gw.URL,
 		EndpointID: "ep_test",
-		Token:      "t",
+		MgmtKey:    "t",
 		Upstream:   up,
 	}
 
@@ -250,7 +250,7 @@ func TestTunnelMultiServerRouting(t *testing.T) {
 	client := Client{
 		GWBase:     gw.URL,
 		EndpointID: "ep_test",
-		Token:      "t",
+		MgmtKey:    "t",
 		Upstreams: []NamedUpstream{
 			{Name: "alpha", Upstream: upAlpha},
 			{Name: "beta", Upstream: upBeta},
@@ -335,7 +335,7 @@ func TestTunnelKickedDoesNotReconnect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	client := Client{GWBase: gw.URL, EndpointID: "ep_test", Token: "t", Upstream: up}
+	client := Client{GWBase: gw.URL, EndpointID: "ep_test", MgmtKey: "t", Upstream: up}
 
 	runErr := make(chan error, 1)
 	go func() { runErr <- client.Run(context.Background()) }()

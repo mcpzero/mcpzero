@@ -59,20 +59,11 @@ mcpzero tunnel start --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /
 The CLI source lives in [`cli/`](./cli/); see its [README](./cli/README.md) for
 building from source and the full command reference.
 
-**Or tunnel from your own code with the SDK:**
-
-```bash
-npm install mcpzero-sdk          # TypeScript
-pip install mcpzero-sdk          # Python
-```
-
 ## Repositories
 
 | Repo | What | License |
 |------|------|---------|
 | [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
-| [`sdk-ts`](https://github.com/mcpzero/sdk-ts) | TypeScript SDK — npm `mcpzero-sdk` | MIT |
-| [`sdk-py`](https://github.com/mcpzero/sdk-py) | Python SDK — PyPI `mcpzero-sdk` | MIT |
 | [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero` | — |
 
 ## Documentation

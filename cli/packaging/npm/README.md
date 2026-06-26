@@ -11,5 +11,3 @@ mcpzero --version
 
 Equivalent installs: `brew install mcpzero/tap/mcpzero` or
 `curl -fsSL https://mcpzero.io/install.sh | sh`.
-
-The library SDKs are published separately as `mcpzero-sdk`.

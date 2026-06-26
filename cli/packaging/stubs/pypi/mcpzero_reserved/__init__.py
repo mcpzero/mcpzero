@@ -1,6 +1,6 @@
 """Reserved namespace for the MCPZERO project.
 
-Install the CLI as ``mcpzero-cli`` or the SDK as ``mcpzero-sdk``.
+Install the CLI as ``mcpzero-cli``.
 See https://mcpzero.io.
 """
 

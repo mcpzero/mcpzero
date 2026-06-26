@@ -68,13 +68,17 @@ type startParams struct {
 	// tunnel multiplexes them and the single mcpCmd/mcpURL fields are unused.
 	servers []mcpconfig.ServerSpec
 	gwBase  string
-	token   string
+	mgmtKey string
 }
+
+// mgmtKeyEnvVar is the user-facing env var for supplying a management key,
+// matching the convention used by the dashboard and the tunnel protocol docs.
+const mgmtKeyEnvVar = "MCPZERO_MGMT_KEY"
 
 func tunnelStart(args []string) error {
 	fs := flag.NewFlagSet("tunnel start", flag.ExitOnError)
 	endpointID := fs.String("endpoint", "", "endpoint ID from dashboard")
-	token := fs.String("token", "", "endpoint tunnel token (optional if logged in)")
+	mgmtKey := fs.String("mgmt-key", "", "management key for headless/CI auth (or set "+mgmtKeyEnvVar+"; optional if logged in)")
 	mcpCmd := fs.String("mcp-cmd", "", "command to start local MCP server (stdio)")
 	mcpWorkDir := fs.String("mcp-workdir", "", "working directory for --mcp-cmd")
 	mcpURL := fs.String("mcp-url", "", "URL of an HTTP MCP server to proxy (alternative to --mcp-cmd)")
@@ -140,7 +144,12 @@ func tunnelStart(args []string) error {
 		return err
 	}
 
-	resolvedGWBase, err := resolveGWBase(*gwBase, *token)
+	mgmtKeyValue := *mgmtKey
+	if mgmtKeyValue == "" {
+		mgmtKeyValue = os.Getenv(mgmtKeyEnvVar)
+	}
+
+	resolvedGWBase, err := resolveGWBase(*gwBase, mgmtKeyValue)
 	if err != nil {
 		return err
 	}
@@ -158,7 +167,7 @@ func tunnelStart(args []string) error {
 		mcpHeaders:   headers,
 		servers:      selectedServers,
 		gwBase:       resolvedGWBase,
-		token:        *token,
+		mgmtKey:      mgmtKeyValue,
 	}
 
 	if *detach || *detachShort {
@@ -228,12 +237,12 @@ func checkEndpointConflict(endpointID string, force bool) error {
 }
 
 // resolveGWBase validates auth and resolves the gateway base URL.
-func resolveGWBase(gwBaseFlag, token string) (string, error) {
+func resolveGWBase(gwBaseFlag, mgmtKey string) (string, error) {
 	gwBase := gwBaseFlag
-	if token == "" {
+	if mgmtKey == "" {
 		creds, err := auth.LoadCredentials()
 		if err != nil {
-			return "", fmt.Errorf("no --token provided and not logged in: %w", err)
+			return "", fmt.Errorf("no --mgmt-key provided and not logged in: %w", err)
 		}
 		if gwBase == "" {
 			gwBase = creds.GWBase
@@ -247,7 +256,7 @@ func resolveGWBase(gwBaseFlag, token string) (string, error) {
 
 func startForeground(p startParams) error {
 	refreshToken := ""
-	if p.token == "" {
+	if p.mgmtKey == "" {
 		creds, err := auth.LoadCredentials()
 		if err != nil {
 			return err
@@ -261,7 +270,7 @@ func startForeground(p startParams) error {
 	client := tunnelpkg.Client{
 		GWBase:       p.gwBase,
 		EndpointID:   p.endpointID,
-		Token:        p.token,
+		MgmtKey:      p.mgmtKey,
 		RefreshToken: refreshToken,
 	}
 
@@ -394,7 +403,7 @@ func startDetached(p startParams) error {
 		MCPHeaders:   p.mcpHeaders,
 		Servers:      daemonServers,
 		GWBase:       p.gwBase,
-		Token:        p.token,
+		MgmtKey:      p.mgmtKey,
 	})
 	if err != nil {
 		return err
@@ -440,10 +449,10 @@ func tunnelDaemonRun(args []string) error {
 		return err
 	}
 
-	token := os.Getenv(daemon.TokenEnvVar)
+	mgmtKey := os.Getenv(daemon.MgmtKeyEnvVar)
 	refreshToken := ""
 	gwBase := s.GWBase
-	if token == "" {
+	if mgmtKey == "" {
 		creds, err := auth.LoadCredentials()
 		if err != nil {
 			_ = daemon.MarkStatus(hash, daemon.StatusError)
@@ -464,7 +473,7 @@ func tunnelDaemonRun(args []string) error {
 	client := tunnelpkg.Client{
 		GWBase:       gwBase,
 		EndpointID:   s.EndpointID,
-		Token:        token,
+		MgmtKey:      mgmtKey,
 		RefreshToken: refreshToken,
 	}
 
