@@ -1,9 +1,19 @@
-# MCPZERO
+<p align="center">
+  <img src="assets/logo.png" alt="MCPZERO" width="128" height="128" />
+</p>
 
-**The zero-trust security gateway for MCP — expose, secure, and observe MCP
-servers from your laptop to production clients.**
+<h1 align="center">MCPZERO</h1>
 
-[Website](https://mcpzero.io) · [Docs](https://mcpzero.io/docs/) · [Dashboard](https://mcpzero.io/app)
+<p align="center">
+  <strong>The zero-trust security gateway for MCP — expose, secure, and observe MCP
+  servers from your laptop to production clients.</strong>
+</p>
+
+<p align="center">
+  <a href="https://mcpzero.io">Website</a> ·
+  <a href="https://mcpzero.io/docs/">Docs</a> ·
+  <a href="https://mcpzero.io/app">Dashboard</a>
+</p>
 
 MCPZERO is an enterprise-grade **zero-trust gateway** for the
 [Model Context Protocol](https://modelcontextprotocol.io). It puts every local
