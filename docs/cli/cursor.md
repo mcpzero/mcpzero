@@ -30,12 +30,6 @@ In Cursor MCP settings (Remote / Streamable HTTP), add:
 | **URL** | `https://gw.mcpzero.io/v1/ep_abc123/postgres` |
 | **Header** | `Authorization: Bearer mz_live_…` |
 
-### Local development
-
-| Field | Value |
-|-------|-------|
-| **URL** | `http://localhost:8787/v1/ep_dev/postgres` |
-| **Header** | `Authorization: Bearer dev_key_change_me` |
 
 ## 4. Test with curl
 
@@ -54,5 +48,4 @@ Open [Dashboard → Ledger](/app/ledger). Each Cursor tool call appears with too
 
 ## Next
 
-- [MCP HTTP API reference](/docs/api/mcp-endpoints/)
 - [Troubleshooting](/docs/cli/troubleshooting/)

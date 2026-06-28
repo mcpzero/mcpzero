@@ -20,18 +20,6 @@ Credentials are stored at:
 
 File permissions are `0600`. The refresh token is valid for **90 days** (rolling).
 
-## Local development
-
-When running the web worker locally on port 8788:
-
-```bash
-mcpzero login \
-  --web-base http://localhost:8788 \
-  --gw-base http://localhost:8787
-```
-
-You must register an account first at [localhost:8788/app/register](http://localhost:8788/app/register).
-
 ## How it works
 
 1. CLI starts a localhost callback server on a random port

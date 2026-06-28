@@ -92,22 +92,6 @@ mcpzero tunnel start \
 
 On macOS, the filesystem server may resolve allowed paths under `/private/tmp/...`.
 
-## Local dev
-
-```bash
-# Terminal 1 — gateway
-cd saas/gateway && pnpm dev   # :8787
-
-# Terminal 2 — tunnel
-mcpzero login --web-base http://localhost:8788 --gw-base http://localhost:8787
-mcpzero tunnel start \
-  --endpoint ep_dev \
-  --gw-base http://localhost:8787 \
-  --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp/mcpzero-test"
-```
-
-Use seed endpoint `ep_dev` after applying dev migrations (see repo `docs/phase1-e2e.md`).
-
 ## What happens under the hood
 
 1. CLI dials `wss://gw.mcpzero.io/tunnel/{endpointId}`
