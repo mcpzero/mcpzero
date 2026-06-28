@@ -9,5 +9,5 @@ pipx install mcpzero-cli
 mcpzero --version
 ```
 
-Equivalent installs: `brew install mcpzero/tap/mcpzero` or
-`curl -fsSL https://mcpzero.io/install.sh | sh`.
+Equivalent installs: `brew install mcpzero/tap/mcpzero-cli` or
+`curl -fsSL https://mcpzero.io/install-cli.sh | sh`.

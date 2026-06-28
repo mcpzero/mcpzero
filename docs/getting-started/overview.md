@@ -26,7 +26,7 @@ MCPZERO turns a **local stdio MCP server** into a **remote HTTP endpoint** that 
 5. **Configure Cursor** — remote MCP URL `https://gw.mcpzero.io/v1/ep_abc123/postgres` + your API key
 6. **Inspect calls** — [Dashboard → Activity](/app/activity)
 
-## Architecture (simplified)
+## Architecture
 
 ```
 Cursor / AI client
@@ -43,7 +43,7 @@ mcpzero CLI  ←→  local MCP server (stdio)
 | Host | Purpose |
 |------|---------|
 | `mcpzero.io` | Landing, Dashboard, Docs |
-| `gw.mcpzero.io` | MCP proxy + tunnel WebSocket |
+| `gw.mcpzero.io` | MCP gateway + tunnel WebSocket |
 
 ## Next steps
 

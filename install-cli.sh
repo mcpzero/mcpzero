@@ -1,7 +1,7 @@
 #!/bin/sh
 # MCPZERO CLI installer.
 #
-#   curl -fsSL https://mcpzero.io/install.sh | sh
+#   curl -fsSL https://mcpzero.io/install-cli.sh | sh
 #
 # Downloads the pre-built `mcpzero` binary for your platform and installs it onto
 # your PATH. By default it pulls from the project's GitHub Releases; set

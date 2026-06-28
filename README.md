@@ -59,11 +59,12 @@ edge:
 **Tunnel a local server with the CLI:**
 
 ```bash
-brew install mcpzero/tap/mcpzero
+brew install mcpzero/tap/mcpzero-cli
 mcpzero tunnel start --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp"
 ```
 
-(or `curl -fsSL https://mcpzero.io/install.sh | sh`, or with Go:
+(or `curl -fsSL https://mcpzero.io/install-cli.sh | sh`, `npm install -g mcpzero-cli`,
+`pipx install mcpzero-cli`, or with Go:
 `go install github.com/mcpzero/mcpzero/cli/cmd/mcpzero@latest`)
 
 The CLI source lives in [`cli/`](./cli/); see its [README](./cli/README.md) for
@@ -74,7 +75,7 @@ building from source and the full command reference.
 | Repo | What | License |
 |------|------|---------|
 | [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
-| [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero` | — |
+| [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero-cli` | — |
 
 ## Documentation
 

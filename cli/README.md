@@ -11,10 +11,16 @@ reach it over a single outbound WebSocket — no inbound ports, no public host.
 
 ```bash
 # macOS / Linux — detects your platform, verifies the checksum, installs `mcpzero`
-curl -fsSL https://mcpzero.io/install.sh | sh
+curl -fsSL https://mcpzero.io/install-cli.sh | sh
 
 # Homebrew (macOS / Linux)
-brew install mcpzero/tap/mcpzero
+brew install mcpzero/tap/mcpzero-cli
+
+# npm
+npm install -g mcpzero-cli
+
+# Python (pipx / uv / pip)
+pipx install mcpzero-cli
 ```
 
 Windows, pinned versions, manual downloads, and checksums are covered in the

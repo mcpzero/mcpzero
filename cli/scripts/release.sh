@@ -141,7 +141,7 @@ ok "generated SHA256SUMS + VERSION"
 
 # ---- bump Homebrew formula ---------------------------------------------------
 # Keeps homebrew-tap pinned to this release (R2 URLs + matching sha256).
-FORMULA="$HOMEBREW_TAP_DIR/Formula/mcpzero.rb"
+FORMULA="$HOMEBREW_TAP_DIR/Formula/mcpzero-cli.rb"
 sha_for() {
   grep " .${PKG}_${VERSION}_$1\.tar\.gz\$" "$STAGE/$TAG/SHA256SUMS" \
     | awk '{print $1}' | head -n1
@@ -223,7 +223,7 @@ else
     gh release upload "$TAG" "${gh_assets[@]}" --clobber
   else
     gh release create "$TAG" "${gh_assets[@]}" \
-      --title "$TAG" --notes "MCPZERO CLI $TAG — install: https://mcpzero.io/install.sh"
+      --title "$TAG" --notes "MCPZERO CLI $TAG — install: https://mcpzero.io/install-cli.sh"
   fi
   ok "GitHub Release $TAG published"
 fi
@@ -233,7 +233,7 @@ cat <<EOF
 
 Verify:
   curl -fsSL https://mcpzero.io/dl/latest/VERSION
-  curl -fsSL https://mcpzero.io/install.sh | sh
+  curl -fsSL https://mcpzero.io/install-cli.sh | sh
 
 Pinned download:
   https://mcpzero.io/dl/$TAG/mcpzero-cli_${VERSION}_darwin_arm64.tar.gz

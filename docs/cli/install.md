@@ -17,7 +17,7 @@ not** — there, install `ca-certificates` first. See
 Install the latest CLI for macOS or Linux with a single command:
 
 ```bash
-curl -fsSL https://mcpzero.io/install.sh | sh
+curl -fsSL https://mcpzero.io/install-cli.sh | sh
 ```
 
 This detects your platform, downloads the matching binary, verifies its
@@ -34,14 +34,14 @@ mcpzero login
 
 ```bash
 # Pin a specific version
-curl -fsSL https://mcpzero.io/install.sh | MCPZERO_VERSION=0.1.0 sh
+curl -fsSL https://mcpzero.io/install-cli.sh | MCPZERO_VERSION=0.1.0 sh
 
 # Install to a custom directory
-curl -fsSL https://mcpzero.io/install.sh | MCPZERO_INSTALL_DIR=$HOME/bin sh
+curl -fsSL https://mcpzero.io/install-cli.sh | MCPZERO_INSTALL_DIR=$HOME/bin sh
 
 # Inspect the script before running it
-curl -fsSL https://mcpzero.io/install.sh -o install.sh
-less install.sh && sh install.sh
+curl -fsSL https://mcpzero.io/install-cli.sh -o install-cli.sh
+less install-cli.sh && sh install-cli.sh
 ```
 
 </details>
@@ -49,7 +49,40 @@ less install.sh && sh install.sh
 ### Homebrew (macOS / Linux)
 
 ```bash
-brew install mcpzero/tap/mcpzero
+brew install mcpzero/tap/mcpzero-cli
+```
+
+### npm
+
+If you already use Node.js, install the CLI globally from npm. This downloads
+the prebuilt binary for your platform and puts `mcpzero` on your PATH.
+
+```bash
+npm install -g mcpzero-cli
+mcpzero version
+```
+
+### Python (pip / uv / pipx)
+
+The CLI is also published to PyPI as `mcpzero-cli`. The Python package is a thin
+launcher that fetches the prebuilt binary for your platform — no compilation
+needed.
+
+```bash
+# pipx (recommended — installs into an isolated environment)
+pipx install mcpzero-cli
+
+# uv
+uv tool install mcpzero-cli
+
+# pip
+pip install mcpzero-cli
+```
+
+Then:
+
+```bash
+mcpzero version
 ```
 
 ## Manual download

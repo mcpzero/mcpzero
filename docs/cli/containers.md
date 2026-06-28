@@ -34,7 +34,7 @@ login.
 ## 2. Install the CLI
 
 ```bash
-curl -fsSL https://mcpzero.io/install.sh | sh
+curl -fsSL https://mcpzero.io/install-cli.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
@@ -102,7 +102,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the mcpzero CLI
-RUN curl -fsSL https://mcpzero.io/install.sh | sh
+RUN curl -fsSL https://mcpzero.io/install-cli.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Authenticate non-interactively at runtime with a management key, e.g.:
