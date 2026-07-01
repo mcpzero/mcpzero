@@ -38,8 +38,9 @@ See [Semantic aggregation](/docs/gateway/semantic-aggregation/) for details.
 | Capability | Minimum plan |
 |------------|--------------|
 | Share endpoints & tunnels | Free |
+| Up to 5 servers / 50 tools | Free & Personal |
 | Payload cloud storage | Personal |
-| Searchable audit logs & team environment sharing | Team |
+| Up to 10 servers / 200 tools per tunnel, 20 members | Team |
 | Private deployment & DLP | Enterprise |
 
 See [Plans & pricing](/docs/pricing/plans/) for the full comparison.
