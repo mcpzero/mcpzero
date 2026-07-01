@@ -1,9 +1,9 @@
 ---
 title: MCPZERO Docs
-description: Tunnel, authenticate, and observe MCP servers from your laptop to production clients.
+description: Secure MCP aggregation gateway for teams — tunnel, aggregate, discover, and audit.
 template: splash
 hero:
-  tagline: MCP routing infrastructure for developers shipping local MCP servers to Cursor and other AI clients.
+  tagline: The secure aggregation gateway for team MCP — semantic aggregation, progressive discovery, zero-trust security, and full audit visibility.
   actions:
     - text: Get started
       link: /docs/getting-started/overview/
@@ -21,6 +21,7 @@ hero:
 
 ## What you can do
 
-- **Tunnel local MCP** — Run `mcpzero tunnel start` to expose a stdio MCP server through the MCPZERO gateway.
-- **Protect with API keys** — Buyers call your endpoint with `Authorization: Bearer <mz_live_api_key>`. Keys are managed in the Dashboard.
-- **Observe every tool call** — The gateway records tool name, latency, payloads, and auth failures in the call ledger.
+- **Aggregate MCP servers** — Multiplex many local stdio servers through one endpoint with semantic aggregation and progressive tool discovery.
+- **Share across your team** — Expose governed MCP endpoints that every member can call with API keys from the Dashboard.
+- **Protect with zero-trust auth** — Clients authenticate with `Authorization: Bearer <mz_live_api_key>`. Upstream credentials never leave your machine.
+- **Observe every tool call** — The gateway records tool name, latency, and status by default. Payload retention depends on your plan.

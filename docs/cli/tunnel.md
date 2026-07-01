@@ -92,6 +92,23 @@ mcpzero tunnel start \
 
 On macOS, the filesystem server may resolve allowed paths under `/private/tmp/...`.
 
+## Multiplexed tunnel (`--mcp-auto`)
+
+Publish every server from your existing Cursor, Claude Desktop, or Codex config through one tunnel:
+
+```bash
+mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
+```
+
+The CLI reads `mcp.json`, detects configured stdio servers, and registers them with the gateway. Each server gets its own public path:
+
+```
+→ postgres   https://gw.mcpzero.io/v1/ep_abc123/postgres
+→ filesystem https://gw.mcpzero.io/v1/ep_abc123/filesystem
+```
+
+When two or more servers are active, the endpoint root (`/v1/ep_abc123`) becomes a **meta server** with semantic aggregation and progressive discovery. See [Semantic aggregation](/docs/gateway/semantic-aggregation/).
+
 ## What happens under the hood
 
 1. CLI dials `wss://gw.mcpzero.io/tunnel/{endpointId}`

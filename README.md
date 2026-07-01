@@ -5,8 +5,8 @@
 <h1 align="center">MCPZERO</h1>
 
 <p align="center">
-  <strong>The zero-trust security gateway for MCP — expose, secure, and observe MCP
-  servers from your laptop to production clients.</strong>
+  <strong>The secure MCP aggregation gateway for teams — aggregate, discover, share,
+  and audit MCP servers from your laptop to production clients.</strong>
 </p>
 
 <p align="center">
@@ -15,18 +15,16 @@
   <a href="https://mcpzero.io/app">Dashboard</a>
 </p>
 
-MCPZERO is an enterprise-grade **zero-trust gateway** for the
-[Model Context Protocol](https://modelcontextprotocol.io). It puts every local
-MCP server behind an authenticated, observable edge — so AI agents reach your
-tools without you ever exposing domains, ports, TLS, or credentials.
-
-It is not just a reverse proxy: MCPZERO adds an identity-aware security layer,
-data-loss controls, and full call auditing in front of MCP traffic.
+MCPZERO is an enterprise-grade **MCP aggregation gateway** for the
+[Model Context Protocol](https://modelcontextprotocol.io). It combines semantic
+aggregation, progressive tool discovery, and zero-trust security so teams can
+share MCP capabilities instantly — without exposing domains, ports, TLS, or
+credentials.
 
 ```
-your MCP server (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ zero-trust gateway ──▶ Cursor / Claude Code / Codex
-                                  │                    (auth · DLP · audit)
-                              dashboard: auth, API keys, call ledger
+your MCP servers (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ aggregation gateway ──▶ Cursor / Claude / Codex
+                                  │                    (auth · aggregate · audit)
+                              dashboard: endpoints, API keys, call ledger
 ```
 
 ## Why a gateway, not a proxy
@@ -35,24 +33,41 @@ your MCP server (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ zero-tru
 |--------|---------------|
 | **Zero-Config** | Reads your existing `mcp.json` and multiplexes every local stdio server through one encrypted tunnel — no domains, TLS, or hosting to manage. |
 | **Zero-Trust** | Every public endpoint is enforced at the edge. Clients authenticate with `Authorization: Bearer`; auth resolves in under 5ms and the protocol surface of your tools is never exposed to the internet. |
-| **Zero-Leak** | The gateway forwards in-memory and persists metadata only (tool, latency, status). Request/response bodies are never stored by default — stream full audit logs to your own S3 / R2 / OSS instead. |
+| **Zero-Leak** | The gateway forwards in-memory and persists metadata only (tool, latency, status). Request/response bodies are never stored by default — stream full audit logs to your own S3 / R2 / OSS on paid tiers. |
+
+## Semantic aggregation
+
+Combine many local MCP servers behind one endpoint. Each server keeps its own
+public path; the endpoint root becomes a **meta server** that routes tool calls
+to the correct backend.
+
+```bash
+mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
+# reads mcp.json → postgres, filesystem, puppeteer — one tunnel, many servers
+```
+
+See [Semantic aggregation](https://mcpzero.io/docs/gateway/semantic-aggregation/).
+
+## Progressive discovery
+
+AI clients discover tools on demand instead of loading every schema upfront.
+The meta server exposes `meta_search` and `meta_call_tool` so agents match
+intent to concrete tools without wasting context tokens.
+
+See [Progressive discovery](https://mcpzero.io/docs/gateway/progressive-discovery/).
 
 ## Gateway intelligence
 
 Beyond transport and auth, MCPZERO inspects and orchestrates MCP traffic at the
 edge:
 
-- **Semantic WAF** — a content-aware firewall that understands JSON-RPC and tool
-  schemas, not just HTTP. It inspects every `tools/call` for malicious arguments,
-  unsafe paths, and data-exfiltration patterns, and blocks or flags requests by
-  policy before they ever reach your server.
-- **Tool Hijacking Defense** — scans tool arguments and returned content for
-  injection and jailbreak payloads (instruction overrides, exfil prompts,
-  poisoned tool results), neutralizing them so a compromised tool can't hijack
-  the calling agent.
-- **MCP Orchestration** — fan one endpoint out to many MCP servers with smart
-  routing, health checks, failover, and per-tool access control — composing
-  several local and remote servers into a single governed surface for any agent.
+- **Semantic WAF** *(Enterprise)* — a content-aware firewall that understands
+  JSON-RPC and tool schemas. Inspects every `tools/call` for malicious
+  arguments, unsafe paths, and data-exfiltration patterns.
+- **Tool Hijacking Defense** *(Enterprise)* — scans tool arguments and returned
+  content for injection and jailbreak payloads, neutralizing compromised tools.
+- **Team sharing & audit** — share endpoints across members, visualize traffic,
+  and retain searchable audit logs on Team and Enterprise plans.
 
 ## Get started
 
@@ -75,6 +90,11 @@ building from source and the full command reference.
 | Repo | What | License |
 |------|------|---------|
 | [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
+| [`cli`](https://github.com/mcpzero/cli) | `mcpzero` tunnel CLI (Go) | MIT |
+| [`sdk-ts`](https://github.com/mcpzero/sdk-ts) | TypeScript SDK — npm `mcpzero-sdk` | MIT |
+| [`sdk-go`](https://github.com/mcpzero/sdk-go) | Go SDK — `github.com/mcpzero/sdk-go` | MIT |
+| [`sdk-py`](https://github.com/mcpzero/sdk-py) | Python SDK — PyPI `mcpzero-sdk` | MIT |
+| [`sdk-rust`](https://github.com/mcpzero/sdk-rust) | Rust SDK — crate `mcpzero-sdk` | MIT |
 | [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero-cli` | — |
 
 ## Documentation
