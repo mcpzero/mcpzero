@@ -395,11 +395,44 @@ func (h *HTTPUpstream) captureSession(resp *http.Response) {
 }
 
 func (h *HTTPUpstream) deliverEvent(msg Message) {
+	// Answer a server-initiated roots/list locally (see declineRootsList):
+	// the CLI advertises no roots capability, so it declines instead of
+	// forwarding a request that would otherwise time out at the server.
+	if method, id, ok := serverRequest(msg); ok && method == "roots/list" {
+		go h.respondToServer(declineRootsList(id))
+		return
+	}
 	select {
 	case h.events <- msg:
 	default:
 		// drop if no listener is keeping up
 	}
+}
+
+// respondToServer posts a client→server message (e.g. the reply to a
+// server-initiated request) back to the MCP endpoint: the legacy SSE message
+// endpoint when known, otherwise the streamable HTTP URL. Best effort.
+func (h *HTTPUpstream) respondToServer(body []byte) {
+	h.mu.Lock()
+	target := h.messageURL
+	if target == "" {
+		target = h.rawURL
+	}
+	h.mu.Unlock()
+
+	req, err := http.NewRequest(http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	h.applyHeaders(req)
+
+	resp, err := h.client.Do(req)
+	if err != nil {
+		return
+	}
+	_, _ = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
 }
 
 func (h *HTTPUpstream) resolveURL(ref string) string {

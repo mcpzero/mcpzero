@@ -113,6 +113,39 @@ func expectsResponse(body []byte) bool {
 	return id != "" && id != "null"
 }
 
+// serverRequest reports whether body is a server→client JSON-RPC request (it
+// carries a method and a non-null id) and, if so, returns the method name and
+// the raw id so a reply can be addressed back to it.
+func serverRequest(body []byte) (method string, id json.RawMessage, ok bool) {
+	var m struct {
+		ID     json.RawMessage `json:"id"`
+		Method *string         `json:"method"`
+	}
+	if err := json.Unmarshal(body, &m); err != nil || m.Method == nil {
+		return "", nil, false
+	}
+	raw := strings.TrimSpace(string(m.ID))
+	if raw == "" || raw == "null" {
+		return "", nil, false
+	}
+	return *m.Method, m.ID, true
+}
+
+// declineRootsList builds the CLI's reply to a server-initiated roots/list
+// request. The CLI advertises no "roots" capability and proxies a remote
+// client whose local filesystem roots are irrelevant to a server running on
+// the tunnel host, so it answers with JSON-RPC method-not-found (-32601) just
+// like a standard client without roots support. Servers such as
+// @modelcontextprotocol/server-filesystem then fall back to their configured
+// directories immediately instead of blocking until the request times out
+// ("Failed to request initial roots from client: ... -32001 Request timed out").
+func declineRootsList(id json.RawMessage) []byte {
+	return []byte(fmt.Sprintf(
+		`{"jsonrpc":"2.0","id":%s,"error":{"code":-32601,"message":"roots/list not supported (client does not advertise the roots capability)"}}`,
+		id,
+	))
+}
+
 // initializeRequest is the MCP initialize handshake the CLI sends to upstreams.
 // clientInfo.version reflects the CLI build version (set via ldflags).
 var initializeRequest = fmt.Sprintf(

@@ -4,14 +4,16 @@ package upstream
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 )
 
 // fakeStdioServer is a minimal MCP-over-stdio server: it answers initialize and
 // tools/list, and—crucially—emits a server-initiated roots/list request right
-// after the initialized notification, which is the bidirectional case the
-// tunnel must now handle.
+// after the initialized notification. The CLI must answer roots/list locally
+// (it advertises no roots capability); the server acknowledges the reply by
+// emitting a notification so the test can observe the loop completed.
 const fakeStdioServer = `
 while IFS= read -r line; do
   case "$line" in
@@ -20,6 +22,9 @@ while IFS= read -r line; do
       ;;
     *'notifications/initialized'*)
       printf '%s\n' '{"jsonrpc":"2.0","id":"s1","method":"roots/list"}'
+      ;;
+    *'"id":"s1"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/roots_declined"}'
       ;;
     *'"method":"tools/list"'*)
       printf '%s\n' '{"jsonrpc":"2.0","id":7,"result":{"tools":[]}}'
@@ -38,14 +43,19 @@ func TestStdioBidirectional(t *testing.T) {
 	}
 	defer up.Close()
 
-	// 1. The server-initiated roots/list request must surface on Events.
+	// 1. roots/list must be answered locally (not forwarded). We observe the
+	// server's follow-up notification, emitted only after it receives the
+	// CLI's reply.
 	select {
 	case ev := <-up.Events():
-		if !hasMethod(ev) || jsonRPCID(ev) != `"s1"` {
-			t.Fatalf("unexpected server event: %s", ev)
+		if strings.Contains(string(ev), `"method":"roots/list"`) {
+			t.Fatalf("roots/list should be answered locally, not forwarded: %s", ev)
+		}
+		if !strings.Contains(string(ev), "notifications/roots_declined") {
+			t.Fatalf("expected roots_declined ack on Events(), got: %s", ev)
 		}
 	case <-time.After(3 * time.Second):
-		t.Fatal("did not receive server-initiated roots/list on Events()")
+		t.Fatal("did not observe roots/list auto-reply ack on Events()")
 	}
 
 	// 2. A normal client request is correlated to its response by id.

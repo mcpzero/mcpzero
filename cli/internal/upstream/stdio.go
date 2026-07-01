@@ -140,7 +140,17 @@ func (s *StdioUpstream) readLoop() {
 			continue
 		}
 		if hasMethod(line) {
-			// Server-initiated request or notification → forward to the client.
+			// A server-initiated roots/list request is answered locally: the
+			// CLI advertises no roots capability and proxies a remote client,
+			// so forwarding it would only let it time out at the server.
+			if method, id, ok := serverRequest(line); ok && method == "roots/list" {
+				s.writeMu.Lock()
+				_ = stdio.WriteMessage(s.stdin, declineRootsList(id))
+				s.writeMu.Unlock()
+				continue
+			}
+			// Other server-initiated requests or notifications → forward to
+			// the client.
 			s.deliverEvent(line)
 			continue
 		}

@@ -2,6 +2,7 @@ package upstream
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -115,6 +116,60 @@ func TestHTTPUpstreamNotificationNoBody(t *testing.T) {
 	got := collect(t, up, `{"jsonrpc":"2.0","method":"notifications/initialized"}`)
 	if len(got) != 0 {
 		t.Fatalf("expected no messages for notification, got %#v", got)
+	}
+}
+
+// TestHTTPUpstreamAnswersRootsList verifies that a server-initiated roots/list
+// arriving on the GET event stream is answered locally with -32601 and posted
+// back to the MCP endpoint, rather than being forwarded (and timing out).
+func TestHTTPUpstreamAnswersRootsList(t *testing.T) {
+	replied := make(chan string, 1)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			// Emit one server-initiated roots/list then end the stream. Closing
+			// the stream lets the client's event reader stop cleanly so the
+			// test server can shut down without blocking on a live connection.
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.WriteHeader(http.StatusOK)
+			flusher := w.(http.Flusher)
+			_, _ = w.Write([]byte("data: {\"jsonrpc\":\"2.0\",\"id\":\"rl1\",\"method\":\"roots/list\"}\n\n"))
+			flusher.Flush()
+			return
+		}
+		body, _ := io.ReadAll(r.Body)
+		s := string(body)
+		switch {
+		case strings.Contains(s, `"method":"initialize"`):
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":0,"result":{}}`))
+		case strings.Contains(s, `"id":"rl1"`):
+			select {
+			case replied <- s:
+			default:
+			}
+			w.WriteHeader(http.StatusAccepted)
+		default:
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}))
+	defer srv.Close()
+
+	up, err := NewHTTP(srv.URL, nil, TransportStreamable)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := up.Initialize(context.Background()); err != nil {
+		t.Fatalf("Initialize: %v", err)
+	}
+	defer up.Close()
+
+	select {
+	case s := <-replied:
+		if !strings.Contains(s, "-32601") {
+			t.Fatalf("roots/list reply not a method-not-found error: %s", s)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("CLI did not post a roots/list reply back to the server")
 	}
 }
 

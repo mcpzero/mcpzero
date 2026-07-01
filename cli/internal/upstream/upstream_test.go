@@ -1,6 +1,43 @@
 package upstream
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
+
+func TestServerRequest(t *testing.T) {
+	cases := []struct {
+		body       string
+		wantMethod string
+		wantID     string
+		wantOK     bool
+	}{
+		{`{"jsonrpc":"2.0","id":"s1","method":"roots/list"}`, "roots/list", `"s1"`, true},
+		{`{"jsonrpc":"2.0","id":3,"method":"sampling/createMessage"}`, "sampling/createMessage", "3", true},
+		{`{"jsonrpc":"2.0","method":"notifications/cancelled"}`, "", "", false},
+		{`{"jsonrpc":"2.0","id":null,"method":"roots/list"}`, "", "", false},
+		{`{"jsonrpc":"2.0","id":1,"result":{}}`, "", "", false},
+	}
+	for _, c := range cases {
+		method, id, ok := serverRequest([]byte(c.body))
+		if ok != c.wantOK || method != c.wantMethod || string(id) != c.wantID {
+			t.Errorf("serverRequest(%s) = %q,%s,%v; want %q,%s,%v",
+				c.body, method, id, ok, c.wantMethod, c.wantID, c.wantOK)
+		}
+	}
+}
+
+func TestDeclineRootsList(t *testing.T) {
+	got := string(declineRootsList([]byte(`"s1"`)))
+	for _, want := range []string{`"id":"s1"`, `"code":-32601`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("declineRootsList missing %q: %s", want, got)
+		}
+	}
+	if strings.Contains(got, `"method"`) {
+		t.Errorf("reply must not carry a method: %s", got)
+	}
+}
 
 func TestParseHeader(t *testing.T) {
 	t.Setenv("UPSTREAM_TOKEN", "secret-xyz")
