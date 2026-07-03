@@ -90,11 +90,6 @@ building from source and the full command reference.
 | Repo | What | License |
 |------|------|---------|
 | [`mcpzero`](https://github.com/mcpzero/mcpzero) | This repo — docs, examples, install script, protocol spec, and the CLI | MIT |
-| [`cli`](https://github.com/mcpzero/cli) | `mcpzero` tunnel CLI (Go) | MIT |
-| [`sdk-ts`](https://github.com/mcpzero/sdk-ts) | TypeScript SDK — npm `mcpzero-sdk` | MIT |
-| [`sdk-go`](https://github.com/mcpzero/sdk-go) | Go SDK — `github.com/mcpzero/sdk-go` | MIT |
-| [`sdk-py`](https://github.com/mcpzero/sdk-py) | Python SDK — PyPI `mcpzero-sdk` | MIT |
-| [`sdk-rust`](https://github.com/mcpzero/sdk-rust) | Rust SDK — crate `mcpzero-sdk` | MIT |
 | [`homebrew-tap`](https://github.com/mcpzero/homebrew-tap) | `brew install mcpzero/tap/mcpzero-cli` | — |
 
 ## Documentation
