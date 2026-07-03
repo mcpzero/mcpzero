@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -239,14 +241,12 @@ func checkEndpointConflict(endpointID string, force bool) error {
 // resolveGWBase validates auth and resolves the gateway base URL.
 func resolveGWBase(gwBaseFlag, mgmtKey string) (string, error) {
 	gwBase := gwBaseFlag
-	if mgmtKey == "" {
+	if gwBase == "" && mgmtKey == "" {
 		creds, err := auth.LoadCredentials()
 		if err != nil {
 			return "", fmt.Errorf("no --mgmt-key provided and not logged in: %w", err)
 		}
-		if gwBase == "" {
-			gwBase = creds.GWBase
-		}
+		gwBase = creds.GWBase
 	}
 	if gwBase == "" {
 		gwBase = config.DefaultGWBase
@@ -254,14 +254,40 @@ func resolveGWBase(gwBaseFlag, mgmtKey string) (string, error) {
 	return gwBase, nil
 }
 
+func isLocalGateway(gwBase string) bool {
+	u, err := url.Parse(gwBase)
+	if err != nil {
+		return false
+	}
+	host := u.Hostname()
+	if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
+func resolveTunnelAuth(gwBase, mgmtKey string) (string, string, error) {
+	if mgmtKey != "" {
+		return mgmtKey, "", nil
+	}
+	if isLocalGateway(gwBase) {
+		return "", "", fmt.Errorf(
+			"local gateway %s does not support cloud login (cli_refresh); pass --mgmt-key or set %s (dev seed: mzm_dev_change_me)",
+			gwBase, mgmtKeyEnvVar,
+		)
+	}
+	creds, err := auth.LoadCredentials()
+	if err != nil {
+		return "", "", fmt.Errorf("no --mgmt-key provided and not logged in: %w", err)
+	}
+	return "", creds.RefreshToken, nil
+}
+
 func startForeground(p startParams) error {
-	refreshToken := ""
-	if p.mgmtKey == "" {
-		creds, err := auth.LoadCredentials()
-		if err != nil {
-			return err
-		}
-		refreshToken = creds.RefreshToken
+	mgmtKey, refreshToken, err := resolveTunnelAuth(p.gwBase, p.mgmtKey)
+	if err != nil {
+		return err
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -270,7 +296,7 @@ func startForeground(p startParams) error {
 	client := tunnelpkg.Client{
 		GWBase:       p.gwBase,
 		EndpointID:   p.endpointID,
-		MgmtKey:      p.mgmtKey,
+		MgmtKey:      mgmtKey,
 		RefreshToken: refreshToken,
 	}
 
@@ -450,21 +476,18 @@ func tunnelDaemonRun(args []string) error {
 	}
 
 	mgmtKey := os.Getenv(daemon.MgmtKeyEnvVar)
+	if mgmtKey == "" {
+		mgmtKey = os.Getenv(mgmtKeyEnvVar)
+	}
 	refreshToken := ""
 	gwBase := s.GWBase
-	if mgmtKey == "" {
-		creds, err := auth.LoadCredentials()
-		if err != nil {
-			_ = daemon.MarkStatus(hash, daemon.StatusError)
-			return err
-		}
-		refreshToken = creds.RefreshToken
-		if gwBase == "" {
-			gwBase = creds.GWBase
-		}
-	}
 	if gwBase == "" {
 		gwBase = config.DefaultGWBase
+	}
+	mgmtKey, refreshToken, err = resolveTunnelAuth(gwBase, mgmtKey)
+	if err != nil {
+		_ = daemon.MarkStatus(hash, daemon.StatusError)
+		return err
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
