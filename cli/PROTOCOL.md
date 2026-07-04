@@ -144,7 +144,8 @@ After a tunnel registers, buyers reach the server through the gateway:
 
 - Meta server (root): `https://<gw>/v1/<endpointId>` — semantic aggregation and
   progressive discovery (`meta_search`, `meta_call_tool`).
-- Single server without `--mcp-config` (direct): `https://<gw>/v1/<endpointId>/default`
+- Single server without `--mcp-config` (direct, preferred): `https://<gw>/v1/<endpointId>/<upstreamServerName>` — derived from upstream `initialize` `serverInfo.name`.
+- Single server without `--mcp-config` (legacy alias): `https://<gw>/v1/<endpointId>/default`
 - Single server from `--mcp-config` (direct): `https://<gw>/v1/<endpointId>/<configuredName>`
 - Multiplexed (direct): `https://<gw>/v1/<endpointId>/<serverName>`
 

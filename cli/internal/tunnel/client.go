@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/mcpzero/mcpzero/cli/internal/mcpconfig"
 	"github.com/mcpzero/mcpzero/cli/internal/upstream"
 )
 
@@ -202,8 +203,13 @@ func (c *Client) Run(ctx context.Context) error {
 			return fmt.Errorf("initialize server %q: %w", displayName(name), err)
 		}
 		logEvent("mcp session initialized: %s (%s)", displayName(name), up.Transport())
-		go c.forwardEvents(mcpCtx, name, up)
 	}
+
+	c.adoptSemanticServerNames()
+	for _, name := range c.order {
+		go c.forwardEvents(mcpCtx, name, c.registry[name])
+	}
+	logRemoteURLs(c.GWBase, c.EndpointID, c.serverNames())
 
 	runErr := c.serveWithReconnect(ctx, wsURL)
 
@@ -273,19 +279,42 @@ func (c *Client) primaryTransport() string {
 	return c.registry[c.order[0]].Transport()
 }
 
-// resolveUpstream selects the upstream a request targets. A named request must
-// match a registered server. Legacy gateways may send an empty server field for
-// the sole upstream; that is accepted when exactly one server is registered.
+// resolveUpstream selects the upstream a request targets. When exactly one
+// server is registered, any server name (including legacy "default" or "") maps
+// to that sole upstream.
 func (c *Client) resolveUpstream(server string) (upstream.Upstream, bool) {
 	if up, ok := c.registry[server]; ok {
 		return up, true
 	}
-	if server == "" && len(c.registry) == 1 {
+	if len(c.registry) == 1 {
 		for _, up := range c.registry {
 			return up, true
 		}
 	}
 	return nil, false
+}
+
+// adoptSemanticServerNames renames a lone placeholder "default" registry entry to
+// the upstream initialize serverInfo.name (slugified), matching gateway promotion.
+func (c *Client) adoptSemanticServerNames() {
+	if len(c.Upstreams) > 0 || c.Upstream == nil || len(c.order) != 1 {
+		return
+	}
+	only := c.order[0]
+	if only != DefaultServerName {
+		return
+	}
+	raw := c.Upstream.ServerName()
+	if raw == "" {
+		return
+	}
+	name := mcpconfig.Slugify(raw)
+	if name == "" || name == DefaultServerName {
+		return
+	}
+	c.registry[name] = c.Upstream
+	delete(c.registry, DefaultServerName)
+	c.order[0] = name
 }
 
 // closeAll releases every registered upstream.
@@ -319,6 +348,30 @@ func (c *Client) forwardEvents(ctx context.Context, server string, up upstream.U
 // displayName renders a server name for logs.
 func displayName(name string) string {
 	return name
+}
+
+// logRemoteURLs writes the remote URL(s) clients should use after semantic
+// server names are resolved from upstream initialize.
+func logRemoteURLs(gwBase, endpointID string, serverNames []string) {
+	base := strings.TrimRight(gwBase, "/")
+	if len(serverNames) == 1 {
+		name := serverNames[0]
+		fmt.Fprintf(os.Stderr, "remote MCP URLs:\n")
+		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s\n", "(meta)", base, endpointID)
+		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/%s\n", name, base, endpointID, name)
+		if name != DefaultServerName {
+			fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/default\n", "(legacy)", base, endpointID)
+		}
+		return
+	}
+	if len(serverNames) == 0 {
+		fmt.Fprintf(os.Stderr, "remote MCP URL: %s/v1/%s\n", base, endpointID)
+		return
+	}
+	fmt.Fprintln(os.Stderr, "remote MCP URLs:")
+	for _, name := range serverNames {
+		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/%s\n", name, base, endpointID, name)
+	}
 }
 
 // serveWithReconnect establishes the websocket, serves traffic, and—on a

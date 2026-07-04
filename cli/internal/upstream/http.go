@@ -44,6 +44,8 @@ type HTTPUpstream struct {
 	pending    map[string]chan Message
 	pendingMu  sync.Mutex
 	connected  chan struct{} // closed once the legacy SSE endpoint is known
+
+	serverInfoName string
 }
 
 // NewHTTP creates an HTTP upstream. transport is one of auto|streamable-http|sse.
@@ -88,6 +90,12 @@ func (h *HTTPUpstream) Transport() string {
 
 func (h *HTTPUpstream) Events() <-chan Message { return h.events }
 
+func (h *HTTPUpstream) ServerName() string {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.serverInfoName
+}
+
 func (h *HTTPUpstream) setResolved(transport string) {
 	h.mu.Lock()
 	h.resolved = transport
@@ -106,9 +114,16 @@ func (h *HTTPUpstream) Initialize(ctx context.Context) error {
 	// Streamable HTTP: best-effort initialize to capture the session id. A
 	// plain JSON-RPC HTTP endpoint that doesn't implement initialize will
 	// return an error response; that's fine, we still proxy subsequent calls.
-	if err := h.Handle(ctx, []byte(initializeRequest), func(Message) error { return nil }); err != nil {
+	var initResp Message
+	if err := h.Handle(ctx, []byte(initializeRequest), func(msg Message) error {
+		initResp = msg
+		return nil
+	}); err != nil {
 		return fmt.Errorf("connect to %s: %w", h.rawURL, err)
 	}
+	h.mu.Lock()
+	h.serverInfoName = ParseInitializeServerName(initResp)
+	h.mu.Unlock()
 	h.setResolved(TransportStreamable)
 	_ = h.Handle(ctx, []byte(initializedNotification), func(Message) error { return nil })
 
@@ -236,7 +251,16 @@ func (h *HTTPUpstream) initLegacySSE(ctx context.Context) error {
 	}
 
 	// Best-effort MCP handshake over the discovered message endpoint.
-	_ = h.Handle(ctx, []byte(initializeRequest), func(Message) error { return nil })
+	var initResp Message
+	if err := h.Handle(ctx, []byte(initializeRequest), func(msg Message) error {
+		initResp = msg
+		return nil
+	}); err != nil {
+		return err
+	}
+	h.mu.Lock()
+	h.serverInfoName = ParseInitializeServerName(initResp)
+	h.mu.Unlock()
 	_ = h.Handle(ctx, []byte(initializedNotification), func(Message) error { return nil })
 	return nil
 }

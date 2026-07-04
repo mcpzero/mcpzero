@@ -15,11 +15,12 @@ https://gw.mcpzero.io/v1/ep_abc123/postgres ← direct route to one server
 https://gw.mcpzero.io/v1/ep_abc123/filesystem
 ```
 
-Single-server tunnels started with `--mcp-cmd` or `--mcp-url` (without `--mcp-config`) register under the reserved name `default`:
+Single-server tunnels started with `--mcp-cmd` or `--mcp-url` (without `--mcp-config`) initially register under the placeholder name `default`. After the upstream `initialize` handshake, both the CLI and gateway promote that name to the upstream `serverInfo.name` (slugified for URL safety), for example `secure-filesystem-server`:
 
 ```
-https://gw.mcpzero.io/v1/ep_abc123          ← meta server
-https://gw.mcpzero.io/v1/ep_abc123/default  ← direct route
+https://gw.mcpzero.io/v1/ep_abc123                        ← meta server
+https://gw.mcpzero.io/v1/ep_abc123/secure-filesystem-server  ← direct route (preferred)
+https://gw.mcpzero.io/v1/ep_abc123/default                ← legacy alias
 ```
 
 A `--mcp-config` tunnel with only one configured server keeps that server's name — there is no `/default` path.
@@ -43,8 +44,8 @@ You can also add servers manually in the [Dashboard](/app/endpoints) or proxy HT
 
 | URL pattern | Behavior |
 |-------------|----------|
-| `/v1/ep_abc123/<server>` | Routes directly to one backend server (name from `--mcp-config` or multiplex). |
-| `/v1/ep_abc123/default` | Direct route only for single-server tunnels started with `--mcp-cmd` / `--mcp-url` (no `--mcp-config`). |
+| `/v1/ep_abc123/<server>` | Routes directly to one backend server (name from `--mcp-config`, multiplex, or upstream `serverInfo.name`). |
+| `/v1/ep_abc123/default` | Legacy direct route for single-server `--mcp-cmd` / `--mcp-url` tunnels; aliases to the promoted semantic name when present. |
 | `/v1/ep_abc123` (root) | **Meta server** with semantic aggregation and progressive discovery. Use the named path above for direct backend access. |
 
 ## Meta-tools

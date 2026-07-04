@@ -27,7 +27,7 @@ When the endpoint has one or more registered servers, the gateway exposes a **me
 | `meta_search({ intent, context?, limit? })` | Gateway matches your intent to concrete backend tools (within one or many servers) |
 | `meta_call_tool({ server, tool, arguments? })` | Invoke a matched tool; gateway routes to the correct backend |
 
-The AI client never needs the full tool list up front — only server profiles and the two meta-tools. Individual servers remain directly addressable at `/v1/ep_abc123/<server>` (or `/default` for `--mcp-cmd` / `--mcp-url` tunnels).
+The AI client never needs the full tool list up front — only server profiles and the two meta-tools. Individual servers remain directly addressable at `/v1/ep_abc123/<server>` (upstream `serverInfo.name`, `--mcp-config` name, or legacy `/default` for `--mcp-cmd` / `--mcp-url` tunnels).
 
 ## Client integration pattern
 

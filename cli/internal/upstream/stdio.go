@@ -38,6 +38,8 @@ type StdioUpstream struct {
 	events    chan Message
 	done      chan struct{}
 	closeOnce sync.Once
+
+	serverInfoName string
 }
 
 // NewStdio creates a stdio upstream. env holds extra KEY=VALUE environment
@@ -48,6 +50,8 @@ func NewStdio(command, workDir string, env []string, onStart func(pid int)) *Std
 }
 
 func (s *StdioUpstream) Transport() string { return "stdio" }
+
+func (s *StdioUpstream) ServerName() string { return s.serverInfoName }
 
 func (s *StdioUpstream) Initialize(ctx context.Context) error {
 	bridge := stdio.Bridge{Command: s.command, WorkDir: s.workDir, Env: s.env}
@@ -63,9 +67,11 @@ func (s *StdioUpstream) Initialize(ctx context.Context) error {
 	}
 	// The handshake runs synchronously before the demux loop starts, so the
 	// initialize response is read directly here (no concurrent reader yet).
-	if err := stdio.InitializeSession(stdin, read, stdio.DefaultInitTimeout); err != nil {
+	initResp, err := stdio.InitializeSession(stdin, read, stdio.DefaultInitTimeout)
+	if err != nil {
 		return fmt.Errorf("mcp initialize: %w", err)
 	}
+	s.serverInfoName = ParseInitializeServerName(initResp)
 
 	s.pending = make(map[string]chan Message)
 	s.events = make(chan Message, 16)

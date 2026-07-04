@@ -308,6 +308,12 @@ func shellQuote(s string) string {
 
 // slugify converts a server name into a URL-safe slug containing only
 // [A-Za-z0-9_-], collapsing runs of other characters into a single '-'.
+// Slugify converts a server name into a URL-safe slug containing only
+// [A-Za-z0-9_-], collapsing runs of other characters into a single '-'.
+func Slugify(name string) string {
+	return slugify(name)
+}
+
 func slugify(name string) string {
 	var b strings.Builder
 	lastDash := false

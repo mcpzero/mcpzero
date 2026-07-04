@@ -160,6 +160,89 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 	}
 }
 
+// TestTunnelSemanticServerNaming ensures single-server tunnels register the
+// upstream initialize serverInfo.name instead of the placeholder "default".
+func TestTunnelSemanticServerNaming(t *testing.T) {
+	mcp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		body := make([]byte, r.ContentLength)
+		_, _ = r.Body.Read(body)
+		w.Header().Set("Content-Type", "application/json")
+		if strings.Contains(string(body), `"method":"initialize"`) {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":0,"result":{"serverInfo":{"name":"secure-filesystem-server"}}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":7,"result":{"ok":true}}`))
+	}))
+	defer mcp.Close()
+
+	type result struct {
+		servers []string
+	}
+	done := make(chan result, 1)
+
+	upgrader := websocket.Upgrader{}
+	gw := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+
+		var res result
+		_, data, err := conn.ReadMessage()
+		if err != nil {
+			done <- res
+			return
+		}
+		var reg struct {
+			Servers []string `json:"servers"`
+		}
+		_ = json.Unmarshal(data, &reg)
+		res.servers = reg.Servers
+		done <- res
+		_ = conn.WriteJSON(map[string]any{"type": "register_ok"})
+		time.Sleep(200 * time.Millisecond)
+	}))
+	defer gw.Close()
+
+	up, err := upstream.NewHTTP(mcp.URL, nil, upstream.TransportStreamable)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := Client{
+		GWBase:     gw.URL,
+		EndpointID: "ep_test",
+		MgmtKey:    "t",
+		Upstream:   up,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() { runErr <- client.Run(ctx) }()
+
+	select {
+	case res := <-done:
+		if len(res.servers) != 1 || res.servers[0] != "secure-filesystem-server" {
+			t.Fatalf("register should use upstream serverInfo.name, got %#v", res.servers)
+		}
+	case <-time.After(8 * time.Second):
+		cancel()
+		t.Fatal("timed out waiting for semantic register")
+	}
+
+	cancel()
+	select {
+	case <-runErr:
+	case <-time.After(3 * time.Second):
+		t.Fatal("client.Run did not return after cancel")
+	}
+}
+
 // TestTunnelDefaultServerRouting asserts that a single-server tunnel registers
 // as "default" and routes mcp_request messages tagged with that name (or the
 // legacy empty server field) to the sole upstream.

@@ -313,7 +313,8 @@ func startForeground(p startParams) error {
 			return err
 		}
 		client.Upstream = up
-		printEndpointURLs(p.gwBase, p.endpointID, []string{tunnelpkg.DefaultServerName})
+		// Remote URLs are logged from Client.Run after upstream initialize
+		// resolves the semantic server name.
 	}
 
 	fmt.Fprintf(os.Stderr, "connecting to %s/tunnel/%s …\n", p.gwBase, p.endpointID)

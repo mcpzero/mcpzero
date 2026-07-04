@@ -32,8 +32,29 @@ type Upstream interface {
 	// Transport reports the concrete wire transport: "stdio" for a stdio
 	// subprocess, or "streamable-http" | "sse" for an HTTP upstream.
 	Transport() string
+	// ServerName returns the upstream serverInfo.name from initialize, if known.
+	ServerName() string
 	// Close releases resources (and, for stdio, reaps the subprocess).
 	Close() error
+}
+
+// ParseInitializeServerName extracts result.serverInfo.name from an initialize
+// response body.
+func ParseInitializeServerName(body []byte) string {
+	if len(body) == 0 {
+		return ""
+	}
+	var msg struct {
+		Result struct {
+			ServerInfo struct {
+				Name string `json:"name"`
+			} `json:"serverInfo"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(body, &msg); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(msg.Result.ServerInfo.Name)
 }
 
 // Header is a single HTTP header sent to an HTTP upstream.
