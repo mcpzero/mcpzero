@@ -45,13 +45,13 @@ You should receive a JSON-RPC result listing tools from your MCP server.
 ## Endpoint root: meta server
 
 The endpoint **root** URL `https://gw.mcpzero.io/v1/ep_abc123` (no trailing
-server name) is itself a full MCP server. When your endpoint multiplexes
-multiple servers, the root becomes a **meta server** for semantic aggregation
-and progressive discovery.
+server name) is itself a full MCP server — the **meta server** for semantic
+aggregation and progressive discovery. This applies whenever the endpoint has
+one or more registered servers, including a single server with many tools.
 
 See the dedicated guides for full details:
 
-- [Semantic aggregation](/docs/gateway/semantic-aggregation/) — how multiple servers combine behind one endpoint
+- [Semantic aggregation](/docs/gateway/semantic-aggregation/) — meta server at the endpoint root
 - [Progressive discovery](/docs/gateway/progressive-discovery/) — `meta_search`, `meta_call_tool`, and client integration
 
 > Server profiles and `meta_search` use OpenRouter on the gateway. Set the

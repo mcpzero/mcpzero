@@ -40,6 +40,7 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 	type result struct {
 		registered bool
 		transport  string
+		servers    []string
 		chunks     []string
 		ended      bool
 	}
@@ -67,6 +68,13 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 			res.registered = true
 			if tr, ok := reg["transport"].(string); ok {
 				res.transport = tr
+			}
+			if servers, ok := reg["servers"].([]any); ok {
+				for _, s := range servers {
+					if name, ok := s.(string); ok {
+						res.servers = append(res.servers, name)
+					}
+				}
 			}
 		}
 		_ = conn.WriteJSON(map[string]any{"type": "register_ok"})
@@ -127,6 +135,9 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 		if !res.registered {
 			t.Fatalf("gateway did not receive register")
 		}
+		if len(res.servers) != 1 || res.servers[0] != DefaultServerName {
+			t.Fatalf("register did not advertise default server: %#v", res.servers)
+		}
 		if res.transport != "streamable-http" {
 			t.Fatalf("expected transport streamable-http, got %q", res.transport)
 		}
@@ -139,6 +150,299 @@ func TestTunnelHTTPUpstreamStreaming(t *testing.T) {
 	case <-time.After(8 * time.Second):
 		cancel()
 		t.Fatal("timed out waiting for tunnel to stream response")
+	}
+
+	cancel()
+	select {
+	case <-runErr:
+	case <-time.After(3 * time.Second):
+		t.Fatal("client.Run did not return after cancel")
+	}
+}
+
+// TestTunnelDefaultServerRouting asserts that a single-server tunnel registers
+// as "default" and routes mcp_request messages tagged with that name (or the
+// legacy empty server field) to the sole upstream.
+func TestTunnelDefaultServerRouting(t *testing.T) {
+	newMCP := func() *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+			body := make([]byte, r.ContentLength)
+			_, _ = r.Body.Read(body)
+			w.Header().Set("Content-Type", "application/json")
+			if strings.Contains(string(body), `"method":"initialize"`) {
+				_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":0,"result":{}}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":7,"result":{"ok":true}}`))
+		}))
+	}
+	mcp := newMCP()
+	defer mcp.Close()
+
+	type result struct {
+		servers []string
+		chunk   string
+		ended   bool
+	}
+	done := make(chan result, 1)
+
+	upgrader := websocket.Upgrader{}
+	gw := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+
+		var res result
+		_, data, err := conn.ReadMessage()
+		if err != nil {
+			done <- res
+			return
+		}
+		var reg struct {
+			Type    string   `json:"type"`
+			Servers []string `json:"servers"`
+		}
+		_ = json.Unmarshal(data, &reg)
+		res.servers = reg.Servers
+		_ = conn.WriteJSON(map[string]any{"type": "register_ok"})
+
+		_ = conn.WriteJSON(map[string]string{
+			"type":   "mcp_request",
+			"id":     "r1",
+			"server": DefaultServerName,
+			"body":   `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"ping","arguments":{}}}`,
+		})
+
+		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		for {
+			_, data, err := conn.ReadMessage()
+			if err != nil {
+				break
+			}
+			var msg map[string]any
+			if err := json.Unmarshal(data, &msg); err != nil {
+				continue
+			}
+			switch msg["type"] {
+			case "mcp_stream_chunk":
+				if msg["id"] == "r1" {
+					res.chunk = msg["body"].(string)
+				}
+			case "mcp_stream_end":
+				if msg["id"] == "r1" {
+					res.ended = true
+					done <- res
+					return
+				}
+			}
+		}
+		done <- res
+	}))
+	defer gw.Close()
+
+	up, err := upstream.NewHTTP(mcp.URL, nil, upstream.TransportStreamable)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := Client{
+		GWBase:     gw.URL,
+		EndpointID: "ep_test",
+		MgmtKey:    "t",
+		Upstream:   up,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() { runErr <- client.Run(ctx) }()
+
+	select {
+	case res := <-done:
+		if len(res.servers) != 1 || res.servers[0] != DefaultServerName {
+			t.Fatalf("register did not advertise default server: %#v", res.servers)
+		}
+		if !res.ended {
+			t.Fatalf("stream did not end")
+		}
+		if !strings.Contains(res.chunk, `"ok":true`) {
+			t.Fatalf("request not routed to default upstream: %q", res.chunk)
+		}
+	case <-time.After(8 * time.Second):
+		cancel()
+		t.Fatal("timed out waiting for default-server response")
+	}
+
+	cancel()
+	select {
+	case <-runErr:
+	case <-time.After(3 * time.Second):
+		t.Fatal("client.Run did not return after cancel")
+	}
+}
+
+// TestTunnelLegacyEmptyServerRouting keeps routing unnamed mcp_request messages
+// to the sole upstream for backward compatibility with older gateways.
+func TestTunnelLegacyEmptyServerRouting(t *testing.T) {
+	mcp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":0,"result":{}}`))
+	}))
+	defer mcp.Close()
+
+	type result struct {
+		ended bool
+	}
+	done := make(chan result, 1)
+
+	upgrader := websocket.Upgrader{}
+	gw := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+
+		var res result
+		if _, _, err := conn.ReadMessage(); err != nil {
+			done <- res
+			return
+		}
+		_ = conn.WriteJSON(map[string]any{"type": "register_ok"})
+
+		_ = conn.WriteJSON(map[string]string{
+			"type": "mcp_request",
+			"id":   "r1",
+			"body": `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"ping","arguments":{}}}`,
+		})
+
+		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		for {
+			_, data, err := conn.ReadMessage()
+			if err != nil {
+				break
+			}
+			var msg map[string]any
+			if err := json.Unmarshal(data, &msg); err != nil {
+				continue
+			}
+			if msg["type"] == "mcp_stream_end" && msg["id"] == "r1" {
+				res.ended = true
+				done <- res
+				return
+			}
+		}
+		done <- res
+	}))
+	defer gw.Close()
+
+	up, err := upstream.NewHTTP(mcp.URL, nil, upstream.TransportStreamable)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := Client{GWBase: gw.URL, EndpointID: "ep_test", MgmtKey: "t", Upstream: up}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() { runErr <- client.Run(ctx) }()
+
+	select {
+	case res := <-done:
+		if !res.ended {
+			t.Fatalf("legacy unnamed request did not complete")
+		}
+	case <-time.After(8 * time.Second):
+		cancel()
+		t.Fatal("timed out waiting for legacy empty-server response")
+	}
+
+	cancel()
+	select {
+	case <-runErr:
+	case <-time.After(3 * time.Second):
+		t.Fatal("client.Run did not return after cancel")
+	}
+}
+
+// TestTunnelConfigSingleServerRouting ensures a single --mcp-config server keeps
+// its configured name in register (no reserved "default" name).
+func TestTunnelConfigSingleServerRouting(t *testing.T) {
+	mcp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":0,"result":{}}`))
+	}))
+	defer mcp.Close()
+
+	type result struct {
+		servers []string
+	}
+	done := make(chan result, 1)
+
+	upgrader := websocket.Upgrader{}
+	gw := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+
+		var res result
+		_, data, err := conn.ReadMessage()
+		if err != nil {
+			done <- res
+			return
+		}
+		var reg struct {
+			Servers []string `json:"servers"`
+		}
+		_ = json.Unmarshal(data, &reg)
+		res.servers = reg.Servers
+		done <- res
+		_ = conn.WriteJSON(map[string]any{"type": "register_ok"})
+		time.Sleep(200 * time.Millisecond)
+	}))
+	defer gw.Close()
+
+	up, err := upstream.NewHTTP(mcp.URL, nil, upstream.TransportStreamable)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := Client{
+		GWBase:     gw.URL,
+		EndpointID: "ep_test",
+		MgmtKey:    "t",
+		Upstreams: []NamedUpstream{
+			{Name: "postgres", Upstream: up},
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() { runErr <- client.Run(ctx) }()
+
+	select {
+	case res := <-done:
+		if len(res.servers) != 1 || res.servers[0] != "postgres" {
+			t.Fatalf("register should keep configured name, got %#v", res.servers)
+		}
+	case <-time.After(8 * time.Second):
+		cancel()
+		t.Fatal("timed out waiting for register")
 	}
 
 	cancel()

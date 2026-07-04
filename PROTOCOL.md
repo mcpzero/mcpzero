@@ -67,19 +67,27 @@ Clients always speak v2.
   "protocolVersion": 2,
   "transport": "stdio",          // hint: the upstream's wire transport
   "capabilities": ["streaming"],
-  "servers": ["alpha", "beta"],  // omit/empty for a single-server tunnel
-  "serverInfos": [               // same servers with per-server transport
-    { "name": "alpha", "transport": "stdio" },
-    { "name": "beta",  "transport": "streamable-http" }
+  "servers": ["default"],        // single-server tunnel (no --mcp-config)
+  "serverInfos": [               // per-server transport labels
+    { "name": "default", "transport": "stdio" }
   ]
+  // Multiplexed example:
+  // "servers": ["alpha", "beta"],
+  // "serverInfos": [
+  //   { "name": "alpha", "transport": "stdio" },
+  //   { "name": "beta",  "transport": "streamable-http" }
+  // ]
 }
 ```
 
 - `transport` is one of `"stdio" | "streamable-http" | "sse"`. For an
   in-process MCP server, report `"stdio"` (it behaves like a stdio server: one
   reply per request, no out-of-band HTTP semantics).
-- `servers` / `serverInfos` are only present for a multiplexed tunnel. A
-  single in-process server omits both and relies on the top-level `transport`.
+- Single-server tunnels register under the reserved name `"default"` when started
+  with `--mcp-cmd` or `--mcp-url` (no `--mcp-config`). The gateway normalizes
+  older clients that omit `servers` to `"default"` on register. Tunnels started
+  with `--mcp-config` always use the configured server name(s), even when only
+  one server is selected.
 - Authenticate in `auth` with a user-level **management key**
   (`{ "type": "management", "token": "mzm_..." }`). The CLI instead sends
   `"auth": { "type": "cli_refresh", "token": ... }` (see §7).

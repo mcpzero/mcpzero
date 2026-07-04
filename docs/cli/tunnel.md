@@ -107,7 +107,7 @@ The CLI reads `mcp.json`, detects configured stdio servers, and registers them w
 → filesystem https://gw.mcpzero.io/v1/ep_abc123/filesystem
 ```
 
-When two or more servers are active, the endpoint root (`/v1/ep_abc123`) becomes a **meta server** with semantic aggregation and progressive discovery. See [Semantic aggregation](/docs/gateway/semantic-aggregation/).
+When one or more servers are registered, the endpoint root (`/v1/ep_abc123`) is a **meta server** with semantic aggregation and progressive discovery — even for a single server with many tools. See [Semantic aggregation](/docs/gateway/semantic-aggregation/).
 
 ## What happens under the hood
 

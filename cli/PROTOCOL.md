@@ -88,8 +88,18 @@ The only CLI-specific difference is **authentication on `register`**:
 
   ```json
   { "type": "register", "endpointId": "...", "protocolVersion": 2,
-    "auth": { "type": "cli_refresh", "token": "<refresh_token>" }, ... }
+    "auth": { "type": "cli_refresh", "token": "<refresh_token>" },
+    "transport": "stdio",
+    "capabilities": ["streaming"],
+    "servers": ["default"],
+    "serverInfos": [{ "name": "default", "transport": "stdio" }] }
   ```
+
+  Single-server tunnels (no `--mcp-config`) register under the reserved name
+  `default`. Multiplexed tunnels (`--mcp-config`, including a config with only
+  one server) send that server's configured name — the gateway never adds
+  `default` when `servers` is already present. Older CLIs that omit `servers`
+  are normalized to `default` by the gateway on register.
 
   The gateway validates the refresh token, resolves the user, and authorizes the
   endpoint. This is why the logged-in CLI needs no separate credential.
@@ -132,8 +142,11 @@ backstop covers cross-endpoint and multi-hop cycles the CLI cannot see.
 
 After a tunnel registers, buyers reach the server through the gateway:
 
-- Single server: `https://<gw>/v1/<endpointId>`
-- Multiplexed:   `https://<gw>/v1/<endpointId>/<serverName>`
+- Meta server (root): `https://<gw>/v1/<endpointId>` — semantic aggregation and
+  progressive discovery (`meta_search`, `meta_call_tool`).
+- Single server without `--mcp-config` (direct): `https://<gw>/v1/<endpointId>/default`
+- Single server from `--mcp-config` (direct): `https://<gw>/v1/<endpointId>/<configuredName>`
+- Multiplexed (direct): `https://<gw>/v1/<endpointId>/<serverName>`
 
 Buyers authenticate with their own API key (`X-MCP0-Token: <key>` /
 `Authorization: Bearer <key>` / `X-API-Key: <key>`), independent of the CLI's

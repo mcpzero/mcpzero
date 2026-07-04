@@ -3,13 +3,13 @@ title: Progressive discovery
 description: Let AI clients discover MCP tools on demand instead of loading full tool lists upfront.
 ---
 
-**Progressive discovery** is MCPZERO's approach to tool loading for multiplexed endpoints. Instead of dumping every tool schema into the LLM context at session start, the client discovers tools on demand through a small meta-tool surface.
+**Progressive discovery** is MCPZERO's approach to tool loading. Instead of dumping every tool schema into the LLM context at session start, the client discovers tools on demand through a small meta-tool surface at the **endpoint root**.
 
 ## The problem
 
-A multiplexed endpoint might expose dozens of tools across postgres, filesystem, puppeteer, and custom servers. Traditional MCP clients call `tools/list` once and inject every schema into the prompt — wasting context tokens and slowing the first turn.
+An endpoint might expose dozens of tools on one server (filesystem, browser automation, a large custom API) or spread across several servers. Traditional MCP clients call `tools/list` on a direct server path once and inject every schema into the prompt — wasting context tokens and slowing the first turn.
 
-Progressive discovery keeps the initial tool surface small. The model learns what servers exist from lightweight profiles, then searches for specific tools only when needed.
+Progressive discovery keeps the initial tool surface small. The model learns what backends exist from lightweight profiles, then searches for specific tools only when needed — even when there is only **one** backend server with many tools.
 
 ## How it works
 
@@ -19,15 +19,15 @@ Point your client at the **endpoint root** (no trailing server name):
 https://gw.mcpzero.io/v1/ep_abc123
 ```
 
-When the endpoint multiplexes two or more servers, the gateway exposes a **meta server**:
+When the endpoint has one or more registered servers, the gateway exposes a **meta server** at the root URL:
 
 | Method | Purpose |
 |--------|---------|
 | `resources/list` + `resources/read` | Skill-style markdown profiles for each backend server |
-| `meta_search({ intent, context?, limit? })` | Gateway matches your intent to concrete backend tools |
+| `meta_search({ intent, context?, limit? })` | Gateway matches your intent to concrete backend tools (within one or many servers) |
 | `meta_call_tool({ server, tool, arguments? })` | Invoke a matched tool; gateway routes to the correct backend |
 
-The AI client never needs the full tool list up front — only server profiles and the two meta-tools. Individual servers remain directly addressable at `/v1/ep_abc123/<server>`.
+The AI client never needs the full tool list up front — only server profiles and the two meta-tools. Individual servers remain directly addressable at `/v1/ep_abc123/<server>` (or `/default` for `--mcp-cmd` / `--mcp-url` tunnels).
 
 ## Client integration pattern
 
@@ -43,7 +43,9 @@ This pattern dramatically reduces initial token load compared to loading all too
 
 ## Single-server endpoints
 
-If an endpoint exposes only one server, the root URL routes straight through — no meta server. Progressive discovery applies when aggregation is active (2+ servers).
+Single-server tunnels also use the meta server at the root. This is especially useful when one MCP server exposes many tools: connect to the root for `meta_search` / `meta_call_tool`, or use the direct path (`/default` or `/v1/ep_abc123/<configuredName>`) when you want a traditional full `tools/list`.
+
+Legacy endpoints that have not reconnected since the `default` naming change may still pass through at the root until the tunnel registers again.
 
 ## Semantic search backend
 

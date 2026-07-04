@@ -17,6 +17,11 @@ import (
 
 const protocolVersion = 2
 
+// DefaultServerName is the reserved server name for single-server tunnels started
+// with --mcp-cmd or --mcp-url (without --mcp-config). --mcp-config tunnels use
+// the configured server name(s) instead, even when only one is selected.
+const DefaultServerName = "default"
+
 // NamedUpstream pairs a normalized server name with its upstream. The name is
 // the path segment clients use (/v1/<ep>/<name>) and the routing key
 // the gateway sends on each mcp_request.
@@ -208,7 +213,7 @@ func (c *Client) Run(ctx context.Context) error {
 }
 
 // buildRegistry resolves the configured upstream(s) into a name->upstream map.
-// The single-server form (Upstream) registers under the empty-string key; the
+// The single-server form (Upstream) registers under DefaultServerName; the
 // multi-server form (Upstreams) registers under each server's name.
 func (c *Client) buildRegistry() error {
 	c.registry = make(map[string]upstream.Upstream)
@@ -232,34 +237,28 @@ func (c *Client) buildRegistry() error {
 	}
 
 	if c.Upstream != nil {
-		c.registry[""] = c.Upstream
-		c.order = append(c.order, "")
+		c.registry[DefaultServerName] = c.Upstream
+		c.order = append(c.order, DefaultServerName)
 		return nil
 	}
 
 	return fmt.Errorf("no upstream configured")
 }
 
-// serverNames returns the named (non-default) servers for the register message.
+// serverNames returns the registered server names for the register message.
 func (c *Client) serverNames() []string {
-	var names []string
+	names := make([]string, 0, len(c.order))
 	for _, n := range c.order {
-		if n != "" {
-			names = append(names, n)
-		}
+		names = append(names, n)
 	}
 	return names
 }
 
-// serverInfos returns each named server paired with its concrete upstream
-// transport, for the gateway to label per-server in the dashboard. Empty for a
-// single-server tunnel (its transport is advertised via primaryTransport).
+// serverInfos returns each server paired with its concrete upstream transport,
+// for the gateway to label per-server in the dashboard.
 func (c *Client) serverInfos() []registerServerInfo {
-	var infos []registerServerInfo
+	infos := make([]registerServerInfo, 0, len(c.order))
 	for _, n := range c.order {
-		if n == "" {
-			continue
-		}
 		infos = append(infos, registerServerInfo{Name: n, Transport: c.registry[n].Transport()})
 	}
 	return infos
@@ -275,8 +274,8 @@ func (c *Client) primaryTransport() string {
 }
 
 // resolveUpstream selects the upstream a request targets. A named request must
-// match a registered server; an unnamed request resolves to the sole upstream
-// when the tunnel proxies exactly one.
+// match a registered server. Legacy gateways may send an empty server field for
+// the sole upstream; that is accepted when exactly one server is registered.
 func (c *Client) resolveUpstream(server string) (upstream.Upstream, bool) {
 	if up, ok := c.registry[server]; ok {
 		return up, true
@@ -317,12 +316,8 @@ func (c *Client) forwardEvents(ctx context.Context, server string, up upstream.U
 	}
 }
 
-// displayName renders a server name for logs, mapping the default (unnamed)
-// upstream to "default".
+// displayName renders a server name for logs.
 func displayName(name string) string {
-	if name == "" {
-		return "default"
-	}
 	return name
 }
 

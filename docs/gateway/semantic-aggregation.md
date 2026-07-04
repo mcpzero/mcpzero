@@ -7,7 +7,7 @@ MCPZERO **semantic aggregation** lets you expose many local MCP servers through 
 
 ## How it works
 
-When a tunnel multiplexes two or more servers under one endpoint, the gateway synthesizes an **aggregator** at the endpoint root URL:
+When a tunnel registers one or more named servers, the gateway synthesizes an **aggregator** at the endpoint root URL:
 
 ```
 https://gw.mcpzero.io/v1/ep_abc123          ← meta server (aggregator)
@@ -15,7 +15,16 @@ https://gw.mcpzero.io/v1/ep_abc123/postgres ← direct route to one server
 https://gw.mcpzero.io/v1/ep_abc123/filesystem
 ```
 
-Each backend server keeps its own path. The root URL exposes meta-tools (`meta_search`, `meta_call_tool`) and server profiles so agents can discover and invoke tools without loading every schema upfront.
+Single-server tunnels started with `--mcp-cmd` or `--mcp-url` (without `--mcp-config`) register under the reserved name `default`:
+
+```
+https://gw.mcpzero.io/v1/ep_abc123          ← meta server
+https://gw.mcpzero.io/v1/ep_abc123/default  ← direct route
+```
+
+A `--mcp-config` tunnel with only one configured server keeps that server's name — there is no `/default` path.
+
+Each backend server keeps its own path. The root URL exposes meta-tools (`meta_search`, `meta_call_tool`) and server profiles so agents can discover and invoke tools without loading every schema upfront — including when there is only one backend with many tools.
 
 ## Start a multiplexed tunnel
 
@@ -34,8 +43,9 @@ You can also add servers manually in the [Dashboard](/app/endpoints) or proxy HT
 
 | URL pattern | Behavior |
 |-------------|----------|
-| `/v1/ep_abc123/<server>` | Routes directly to one backend server — same as a single-server tunnel. |
-| `/v1/ep_abc123` (root) | **Single server:** transparent pass-through to that server. **Multiple servers:** meta server with semantic aggregation. |
+| `/v1/ep_abc123/<server>` | Routes directly to one backend server (name from `--mcp-config` or multiplex). |
+| `/v1/ep_abc123/default` | Direct route only for single-server tunnels started with `--mcp-cmd` / `--mcp-url` (no `--mcp-config`). |
+| `/v1/ep_abc123` (root) | **Meta server** with semantic aggregation and progressive discovery. Use the named path above for direct backend access. |
 
 ## Meta-tools
 

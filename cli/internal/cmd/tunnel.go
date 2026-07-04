@@ -313,7 +313,7 @@ func startForeground(p startParams) error {
 			return err
 		}
 		client.Upstream = up
-		printEndpointURLs(p.gwBase, p.endpointID, nil)
+		printEndpointURLs(p.gwBase, p.endpointID, []string{tunnelpkg.DefaultServerName})
 	}
 
 	fmt.Fprintf(os.Stderr, "connecting to %s/tunnel/%s …\n", p.gwBase, p.endpointID)
@@ -366,10 +366,19 @@ func specNames(specs []mcpconfig.ServerSpec) []string {
 	return names
 }
 
-// printEndpointURLs writes the remote URL(s) clients should use. With named
-// servers each gets a /<name> sub-path; otherwise the plain endpoint URL.
+// printEndpointURLs writes the remote URL(s) clients should use. A single named
+// server (whether the reserved "default" from --mcp-cmd/--mcp-url or a name from
+// --mcp-config) exposes the meta aggregator at the endpoint root and the backend
+// at /v1/<ep>/<name>. Multiplexed servers each get their own sub-path.
 func printEndpointURLs(gwBase, endpointID string, serverNames []string) {
 	base := strings.TrimRight(gwBase, "/")
+	if len(serverNames) == 1 {
+		name := serverNames[0]
+		fmt.Fprintln(os.Stderr, "remote MCP URLs:")
+		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s\n", "(meta)", base, endpointID)
+		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/%s\n", name, base, endpointID, name)
+		return
+	}
 	if len(serverNames) == 0 {
 		fmt.Fprintf(os.Stderr, "remote MCP URL: %s/v1/%s\n", base, endpointID)
 		return

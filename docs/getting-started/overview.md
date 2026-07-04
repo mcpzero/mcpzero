@@ -13,7 +13,7 @@ MCPZERO is a **secure MCP aggregation gateway for teams**. It turns local stdio 
 | **MCP server** | The tool server process (filesystem, postgres, custom tools) running on your machine via stdio or http. |
 | **CLI tunnel** | `mcpzero tunnel start` binds one endpoint to one or more local MCP servers via WebSocket. |
 | **Gateway** | Edge worker at `https://gw.mcpzero.io` — authenticates API keys, aggregates servers, forwards JSON-RPC, writes activities. |
-| **Semantic aggregation** | When an endpoint multiplexes 2+ servers, the root URL becomes a meta server that routes tool calls intelligently. |
+| **Semantic aggregation** | When an endpoint has one or more registered servers, the root URL is a meta server that routes tool calls intelligently (including a single server with many tools). |
 | **Progressive discovery** | Clients discover tools on demand via `meta_search` instead of loading every schema upfront. |
 | **API key** | Credential for calling an endpoint (`Authorization: Bearer <mz_live_api_key>`). Generated in [Dashboard → API Keys](/app/api-keys). |
 | **Ledger** | Per-call trace of tool name, latency, and status. Payload retention depends on your plan. |
