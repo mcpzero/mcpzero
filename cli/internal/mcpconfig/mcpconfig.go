@@ -170,8 +170,8 @@ func sortedEntryNames(entries map[string]rawEntry) []string {
 // SelectServers resolves which specs to start. If preselected names are given,
 // it filters to those (matching either the normalized or original name) and
 // errors on any unknown name. With a single server it returns it directly.
-// Otherwise it prints a numbered prompt and reads a selection ("all" or
-// comma/space-separated indices) from in.
+// Otherwise it prints a numbered prompt and reads a selection ("all", Enter for
+// all, or comma/space-separated indices) from in.
 func SelectServers(specs []ServerSpec, preselected []string, in io.Reader, out io.Writer) ([]ServerSpec, error) {
 	if len(specs) == 0 {
 		return nil, fmt.Errorf("no servers to select")
@@ -196,7 +196,7 @@ func SelectServers(specs []ServerSpec, preselected []string, in io.Reader, out i
 		}
 		fmt.Fprintf(out, "  [%d] %s -> %s\n", i+1, label, describe(s))
 	}
-	fmt.Fprint(out, "Enter numbers (e.g. 1,3) or 'all': ")
+	fmt.Fprint(out, "Enter numbers (e.g. 1,3), 'all', or press Enter for all: ")
 
 	reader := bufio.NewReader(in)
 	line, err := reader.ReadString('\n')
@@ -205,7 +205,7 @@ func SelectServers(specs []ServerSpec, preselected []string, in io.Reader, out i
 	}
 	line = strings.TrimSpace(line)
 	if line == "" {
-		return nil, fmt.Errorf("no servers selected; pass --mcp-server <name> to choose non-interactively")
+		return specs, nil
 	}
 
 	return parseSelection(specs, line)
@@ -228,7 +228,7 @@ func parseSelection(specs []ServerSpec, line string) ([]ServerSpec, error) {
 	for _, f := range fields {
 		n, err := strconv.Atoi(f)
 		if err != nil || n < 1 || n > len(specs) {
-			return nil, fmt.Errorf("invalid selection %q (choose 1-%d or 'all')", f, len(specs))
+			return nil, fmt.Errorf("invalid selection %q (choose 1-%d, 'all', or press Enter for all)", f, len(specs))
 		}
 		if seen[n] {
 			continue

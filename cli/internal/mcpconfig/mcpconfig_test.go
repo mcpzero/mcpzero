@@ -133,6 +133,15 @@ func TestSelectServers(t *testing.T) {
 		t.Fatalf("expected all 3, got %d", len(got))
 	}
 
+	// Interactive: Enter (empty line) selects all.
+	got, err = SelectServers(specs, nil, strings.NewReader("\n"), &strings.Builder{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("expected all 3 on Enter, got %d", len(got))
+	}
+
 	// Interactive: indices.
 	got, err = SelectServers(specs, nil, strings.NewReader("1,3\n"), &strings.Builder{})
 	if err != nil {
