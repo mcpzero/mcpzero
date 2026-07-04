@@ -144,7 +144,7 @@ Select which MCP servers to start:
   [1] docker-fs [cursor] -> https://gw.mcpzero.io/v1/ep_34e06ce26b
   [2] docker-fs-3 [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9/local-fs-tmp
   [3] local-fs-tmp [cursor] -> npx -y @modelcontextprotocol/server-filesystem /tmp
-  [4] local-mcpzero-bundle [cursor] -> http://127.0.0.1:7901/v1/epc_2b94b1088a
+  [4] local-mcpzero-bundle [cursor] -> http://127.0.0.1:7901/v1/epc_2b94b1088a  ← cluster URL (client target, not a tunnel)
   [5] mcpzero-bundle [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9
   [6] playwright-headless [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9/playwright-headless
   [7] local-fs-tmp (as "local-fs-tmp-2") [project] -> npx -y @modelcontextprotocol/server-filesystem /path/to/tmp
@@ -159,7 +159,7 @@ connecting to https://gw.mcpzero.io/tunnel/ep_0476da16c9 …
 [2026-07-04 22:10:51] tunnel registered for endpoint ep_0476da16c9
 ```
 
-Each line shows the server name, where it was discovered, and the local command or existing remote URL. After you connect, point Cursor at the **endpoint root** for meta server features:
+Each line shows the server name, where it was discovered, and the local command or existing remote URL. Lines pointing at `epc_*` are **cluster roots** already configured in Cursor — select them only if you intend to proxy that remote URL; normally you tunnel local stdio servers. See [Endpoint clusters](/docs/gateway/endpoint-clusters/). After you connect, point Cursor at the **endpoint root** for meta server features:
 
 `https://gw.mcpzero.io/v1/ep_0476da16c9`
 

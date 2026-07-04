@@ -22,6 +22,7 @@ hero:
 ## What you can do
 
 - **Aggregate MCP servers** — Multiplex local stdio servers through one endpoint. Connect at the **endpoint root** for semantic aggregation and progressive discovery.
+- **Compose across endpoints** — On Team+, create **endpoint clusters** (`epc_*`) to search and call tools across several tunnels from one URL.
 - **Share with your team** — Expose governed MCP endpoints that members can call with their own API keys from the Dashboard.
 - **Protect with zero-trust auth** — Clients authenticate with `Authorization: Bearer <mz_live_api_key>`. Upstream credentials never leave your machine.
 - **Observe every tool call** — The gateway records tool name, latency, and status by default. Payload retention depends on your plan.

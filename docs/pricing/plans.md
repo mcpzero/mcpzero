@@ -16,7 +16,7 @@ MCPZERO offers the same secure gateway at every tier. You pay for tunnels, aggre
 | **Team members** | 1 | 1 | 5 | Custom |
 | **Semantic aggregation** (within one endpoint) | Yes | Yes | Yes | Yes |
 | **Progressive discovery** (within one endpoint) | Yes | Yes | Yes | Yes |
-| **Cross-endpoint aggregation & discovery** | — | — | Yes | Yes |
+| **Cross-endpoint aggregation & discovery** | — | — | Yes ([endpoint clusters](/docs/gateway/endpoint-clusters/)) | Yes |
 | **Traffic visualization** | Yes | Yes | Yes | Yes |
 | **Cloud payload storage** | 48 hours | 7 days | 30 days | Private BYO |
 | **Searchable / exportable audit logs** | — | — | Yes | Yes |
@@ -41,7 +41,7 @@ For individuals who need payload history. Two tunnels, each supporting up to 5 s
 
 ### Team
 
-For small teams sharing MCP capabilities. Ten tunnels, each supporting up to 10 servers and 200 aggregated tools. Up to **5 team members**. Cross-endpoint aggregation and discovery, 30-day cloud storage, and searchable audit logs. Rate limit of 60 requests per minute per endpoint.
+For small teams sharing MCP capabilities. Ten tunnels, each supporting up to 10 servers and 200 aggregated tools. Up to **5 team members**. [Endpoint clusters](/docs/gateway/endpoint-clusters/) (`epc_*`) for cross-endpoint aggregation and discovery, 30-day cloud storage, and searchable audit logs. Rate limit of 60 requests per minute per endpoint.
 
 ### Enterprise
 

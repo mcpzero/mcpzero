@@ -66,7 +66,7 @@ Single-server tunnels also use the meta server at the root. This is especially u
 
 Progressive discovery within a single endpoint is available on **all plans** (Free and above).
 
-Cross-endpoint progressive discovery (discovering tools across multiple endpoints) requires **Team** or **Enterprise**. See [Plans & pricing](/docs/pricing/plans/).
+Cross-endpoint progressive discovery (discovering tools across multiple endpoints via an `epc_*` cluster URL) requires **Team** or **Enterprise**. See [Endpoint clusters](/docs/gateway/endpoint-clusters/).
 
 ## Next
 

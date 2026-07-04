@@ -26,9 +26,9 @@ Members inherit the team owner's plan tier for gateway limits (cross-endpoint fe
 
 ## Cross-endpoint composition (Team+)
 
-On **Team** and **Enterprise** plans, teams can aggregate tools and progressive discovery **across multiple endpoints**. This composes several tunnels and environments into a single governed MCP surface for any agent.
+On **Team** and **Enterprise** plans, teams can aggregate tools and progressive discovery **across multiple endpoints** using **endpoint clusters** (`epc_*`). Create a cluster in [Dashboard → Team → Clusters](/app/team/clusters), add member endpoints owned by team members, and point agents at the cluster root URL.
 
-See [Semantic aggregation](/docs/gateway/semantic-aggregation/) for details.
+See [Endpoint clusters](/docs/gateway/endpoint-clusters/) for the full workflow, meta-tool differences (`endpoint_id` in `meta_call_tool`), and Cursor setup.
 
 ## Security considerations
 

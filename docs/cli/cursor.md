@@ -76,6 +76,17 @@ Direct routes return that server's full tool schemas. Use for debugging or clien
 
 See [Semantic aggregation](/docs/gateway/semantic-aggregation/) and [Progressive discovery](/docs/gateway/progressive-discovery/) for when to use root vs. server URLs.
 
+## Endpoint cluster (Team+)
+
+To discover and call tools **across multiple endpoints**, connect Cursor to an **endpoint cluster** root (`epc_*`) instead of a single `ep_*`:
+
+| Field | Value |
+|-------|-------|
+| **URL** | `https://gw.mcpzero.io/v1/epc_2b94b1088a` |
+| **Header** | `Authorization: Bearer mz_live_…` |
+
+Create the cluster and add member endpoints in [Dashboard → Team → Clusters](/app/team/clusters). Each member endpoint must have an active tunnel. On a cluster, `meta_call_tool` includes `endpoint_id` from `meta_search` results — see [Endpoint clusters](/docs/gateway/endpoint-clusters/).
+
 ## 5. Inspect calls
 
 Open [Dashboard → Activity](/app/activity). Each Cursor tool call appears with tool name, latency, and status. Full payload retention depends on your plan — see [Security](/docs/gateway/security/).

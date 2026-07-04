@@ -3,7 +3,7 @@ title: Overview
 description: Core concepts — endpoints, tunnels, aggregation, API keys, and the observability ledger.
 ---
 
-MCPZERO is a **secure MCP aggregation gateway**. It turns local stdio MCP servers into remote HTTP endpoints that AI clients like Cursor can call — with semantic aggregation, progressive discovery, and zero-trust security built in.
+MCPZERO is a **secure MCP aggregation gateway**. It turns local MCP servers into remote HTTP endpoints that AI clients like Cursor can call — with semantic aggregation, progressive discovery, and zero-trust security built in.
 
 
 ## Core concepts
@@ -18,6 +18,7 @@ MCPZERO is a **secure MCP aggregation gateway**. It turns local stdio MCP server
 | **Semantic aggregation** | Backend server(s) behind one endpoint; the root URL is the meta server (including a single server with many tools). |
 | **Progressive discovery** | Clients discover tools on demand via `meta_search` at the endpoint root instead of loading every schema upfront. |
 | **API key** | Credential for calling an endpoint (`Authorization: Bearer <mz_live_api_key>`). Generated in [Dashboard → API Keys](/app/api-keys). |
+| **Endpoint cluster** | A virtual meta server (`epc_*`) that aggregates **multiple endpoints** for cross-endpoint semantic search and progressive discovery. Team+ only — see [Endpoint clusters](/docs/gateway/endpoint-clusters/). |
 | **CLI login** | `mcpzero login` stores a refresh token on your machine so the CLI can start tunnels — **not** used as the Cursor HTTP credential. |
 | **Ledger** | Per-call trace of tool name, latency, and status. Payload retention depends on your plan. |
 
@@ -109,6 +110,7 @@ mcpzero CLI  ←→  local MCP servers (stdio)
 
 - [Semantic aggregation](/docs/gateway/semantic-aggregation/)
 - [Progressive discovery](/docs/gateway/progressive-discovery/)
+- [Endpoint clusters](/docs/gateway/endpoint-clusters/)
 - [Install the CLI](/docs/cli/install/)
 - [Login and start a tunnel](/docs/cli/tunnel/)
 - [Configure Cursor](/docs/cli/cursor/)

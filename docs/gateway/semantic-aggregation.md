@@ -62,9 +62,9 @@ See [Progressive discovery](/docs/gateway/progressive-discovery/) for how client
 
 ## Cross-endpoint aggregation (Team+)
 
-On **Team** and **Enterprise** plans, MCPZERO can aggregate tools and discovery across **multiple endpoints** — not just multiple servers within one endpoint. This lets teams compose a governed MCP surface from several tunnels and environments.
+On **Team** and **Enterprise** plans, MCPZERO can aggregate tools and discovery across **multiple endpoints** — not just multiple servers within one endpoint. Teams create an **endpoint cluster** (`epc_*`) in the Dashboard, add member endpoints, and connect agents to a single cluster root URL.
 
-Cross-endpoint aggregation requires the Team plan or above. See [Plans & pricing](/docs/pricing/plans/).
+See [Endpoint clusters](/docs/gateway/endpoint-clusters/) for setup, `meta_call_tool` routing with `endpoint_id`, and Cursor configuration.
 
 ## Next
 
