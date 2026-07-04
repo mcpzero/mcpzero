@@ -5,8 +5,7 @@
 <h1 align="center">MCPZERO</h1>
 
 <p align="center">
-  <strong>The secure MCP aggregation gateway for teams — aggregate, discover, share,
-  and audit MCP servers from your laptop to production clients.</strong>
+  <strong>Publish, aggregate, secure and share local MCP servers in minutes.</strong>
 </p>
 
 <p align="center">
@@ -15,10 +14,10 @@
   <a href="https://mcpzero.io/app">Dashboard</a>
 </p>
 
-MCPZERO is an enterprise-grade **MCP aggregation gateway** for the
+MCPZERO is a **secure MCP aggregation gateway** for the
 [Model Context Protocol](https://modelcontextprotocol.io). It combines semantic
-aggregation, progressive tool discovery, and zero-trust security so teams can
-share MCP capabilities instantly — without exposing domains, ports, TLS, or
+aggregation, progressive tool discovery, and zero-trust security so you can
+publish and share local MCP servers — without exposing domains, ports, TLS, or
 credentials.
 
 ```
@@ -27,13 +26,14 @@ your MCP servers (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ aggrega
                               dashboard: endpoints, API keys, call ledger
 ```
 
-## Why a gateway, not a proxy
+## Why MCPZERO
 
 | Pillar | What it means |
 |--------|---------------|
 | **Zero-Config** | Reads your existing `mcp.json` and multiplexes every local stdio server through one encrypted tunnel — no domains, TLS, or hosting to manage. |
 | **Zero-Trust** | Every public endpoint is enforced at the edge. Clients authenticate with `Authorization: Bearer`; auth resolves in under 5ms and the protocol surface of your tools is never exposed to the internet. |
 | **Zero-Leak** | The gateway forwards in-memory and persists metadata only (tool, latency, status). Request/response bodies are never stored by default — stream full audit logs to your own S3 / R2 / OSS on paid tiers. |
+｜ **Zero-Friction** ｜ ｜
 
 ## Semantic aggregation
 
@@ -61,10 +61,10 @@ See [Progressive discovery](https://mcpzero.io/docs/gateway/progressive-discover
 Beyond transport and auth, MCPZERO inspects and orchestrates MCP traffic at the
 edge:
 
-- **Semantic WAF** *(Enterprise)* — a content-aware firewall that understands
+- **Semantic WAF** *(Enterprise · Roadmap)* — a content-aware firewall that understands
   JSON-RPC and tool schemas. Inspects every `tools/call` for malicious
   arguments, unsafe paths, and data-exfiltration patterns.
-- **Tool Hijacking Defense** *(Enterprise)* — scans tool arguments and returned
+- **Tool Hijacking Defense** *(Enterprise · Roadmap)* — scans tool arguments and returned
   content for injection and jailbreak payloads, neutralizing compromised tools.
 - **Team sharing & audit** — share endpoints across members, visualize traffic,
   and retain searchable audit logs on Team and Enterprise plans.

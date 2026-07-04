@@ -20,7 +20,7 @@ By default, MCPZERO records **metadata only** for every tool call:
 - Latency
 - Status code
 
-Request and response bodies are forwarded in-memory and dropped — they never hit disk on the Free tier.
+Request and response bodies are forwarded in-memory. **Free** is designed for metadata-only logging; **Personal** and **Team** include tiered cloud payload storage (see table below). Payload retention enforcement by plan is rolling out — see product pricing for committed retention windows.
 
 | Plan | Payload storage |
 |------|-----------------|
@@ -42,9 +42,9 @@ Every plan includes gateway rate limits to protect your endpoints:
 | Team | 60 requests / min per endpoint |
 | Enterprise | Custom |
 
-## Enterprise security controls
+## Enterprise security controls *(Roadmap)*
 
-Available on the **Enterprise** plan:
+The following capabilities are on the **Enterprise roadmap**. Contact [sales@mcpzero.io](mailto:sales@mcpzero.io) for availability and early access.
 
 ### Semantic WAF
 

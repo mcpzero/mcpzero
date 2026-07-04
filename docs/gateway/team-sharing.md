@@ -3,7 +3,7 @@ title: Team sharing
 description: Share MCP endpoints, tunnels, and audit visibility across your team.
 ---
 
-MCPZERO lets teams **instantly share MCP capabilities** — expose local tools through governed endpoints that every member can call, inspect, and audit from a central dashboard.
+MCPZERO lets teams **share MCP capabilities** — expose local tools through governed endpoints that every member can call, inspect, and audit from a central dashboard.
 
 ## What teams share
 
@@ -11,15 +11,18 @@ MCPZERO lets teams **instantly share MCP capabilities** — expose local tools t
 |----------|--------------|
 | **Endpoints** | Created in [Dashboard → Endpoints](/app/endpoints). Each endpoint has a unique ID and public gateway URL. |
 | **Tunnels** | A team member runs `mcpzero tunnel start` to bind local MCP servers to an endpoint. Other members call the same URL with their API keys. |
-| **API keys** | Generated per user or per integration in [Dashboard → API Keys](/app/api-keys). Keys authenticate client requests at the edge. |
+| **API keys** | Generated per user in [Dashboard → API Keys](/app/api-keys). Keys authenticate client requests at the edge. |
 | **Audit visibility** | Team and Enterprise plans retain payloads and provide searchable audit logs so every tool call is traceable. |
 
 ## Typical team workflow
 
-1. An admin creates an endpoint in the Dashboard.
-2. A developer starts a multiplexed tunnel with `--mcp-auto`, exposing postgres, filesystem, and custom tools.
-3. Team members configure Cursor or other MCP clients with the endpoint URL and their API keys.
-4. Everyone inspects traffic in [Dashboard → Activity](/app/activity) — tool names, latency, and (on paid plans) full payloads.
+1. A **Team plan** owner creates a team in the Dashboard and invites members (up to 5 on Team).
+2. An admin or developer creates an endpoint in [Dashboard → Endpoints](/app/endpoints).
+3. A developer starts a multiplexed tunnel: `mcpzero tunnel start --endpoint ep_… --mcp-auto`
+4. Each member configures Cursor at the **endpoint root** URL with their own API key.
+5. Everyone inspects traffic in [Dashboard → Activity](/app/activity) — tool names, latency, and (on paid plans) payloads.
+
+Members inherit the team owner's plan tier for gateway limits (cross-endpoint features, rate limits, etc.).
 
 ## Cross-endpoint composition (Team+)
 
@@ -40,8 +43,8 @@ See [Semantic aggregation](/docs/gateway/semantic-aggregation/) for details.
 | Share endpoints & tunnels | Free |
 | Up to 5 servers / 50 tools | Free & Personal |
 | Payload cloud storage | Personal |
-| Up to 10 servers / 200 tools per tunnel, 20 members | Team |
-| Private deployment & DLP | Enterprise |
+| Up to 10 servers / 200 tools per tunnel, 5 members, cross-endpoint | Team |
+| Private deployment & DLP *(Roadmap)* | Enterprise |
 
 See [Plans & pricing](/docs/pricing/plans/) for the full comparison.
 

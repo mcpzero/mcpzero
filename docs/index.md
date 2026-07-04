@@ -1,9 +1,9 @@
 ---
 title: MCPZERO Docs
-description: Secure MCP aggregation gateway for teams — tunnel, aggregate, discover, and audit.
+description: Publish, aggregate, and secure local MCP servers — tunnel, aggregate, discover, and audit.
 template: splash
 hero:
-  tagline: The secure aggregation gateway for team MCP — semantic aggregation, progressive discovery, zero-trust security, and full audit visibility.
+  tagline: Publish, aggregate, and secure your local MCP servers — semantic aggregation, progressive discovery, zero-trust security, and audit visibility.
   actions:
     - text: Get started
       link: /docs/getting-started/overview/
@@ -21,7 +21,7 @@ hero:
 
 ## What you can do
 
-- **Aggregate MCP servers** — Multiplex many local stdio servers through one endpoint with semantic aggregation and progressive tool discovery.
-- **Share across your team** — Expose governed MCP endpoints that every member can call with API keys from the Dashboard.
+- **Aggregate MCP servers** — Multiplex local stdio servers through one endpoint. Connect at the **endpoint root** for semantic aggregation and progressive discovery.
+- **Share with your team** — Expose governed MCP endpoints that members can call with their own API keys from the Dashboard.
 - **Protect with zero-trust auth** — Clients authenticate with `Authorization: Bearer <mz_live_api_key>`. Upstream credentials never leave your machine.
 - **Observe every tool call** — The gateway records tool name, latency, and status by default. Payload retention depends on your plan.

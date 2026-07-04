@@ -3,7 +3,9 @@ title: Semantic aggregation
 description: Combine multiple MCP servers behind a single endpoint with intelligent routing.
 ---
 
-MCPZERO **semantic aggregation** lets you expose many local MCP servers through one endpoint. Clients can address each server directly or use the endpoint root as a unified meta server.
+MCPZERO **semantic aggregation** lets you expose local MCP servers through one endpoint. Clients can address each server directly or use the endpoint root as a unified **meta server**.
+
+Whenever a tunnel registers one or more servers — **including a single server** — the gateway enables the meta server at the endpoint root by default.
 
 ## How it works
 
@@ -27,6 +29,14 @@ A `--mcp-config` tunnel with only one configured server keeps that server's name
 
 Each backend server keeps its own path. The root URL exposes meta-tools (`meta_search`, `meta_call_tool`) and server profiles so agents can discover and invoke tools without loading every schema upfront — including when there is only one backend with many tools.
 
+## Endpoint root vs. server URL
+
+| URL | Name | Behavior | When to use |
+|-----|------|----------|-------------|
+| `https://gw.mcpzero.io/v1/ep_abc123` | **Endpoint root / meta server** | Exposes `meta_search`, `meta_call_tool`, and server profiles. `tools/list` returns the two meta-tools, not every backend schema. | **Default (recommended)** — semantic aggregation, progressive discovery, first test. Works for single-server and multi-server endpoints. |
+| `https://gw.mcpzero.io/v1/ep_abc123/<server>` | **Server URL / direct route** | Forwards JSON-RPC to one backend. `tools/list` returns that server's full tool schemas. | Traditional MCP client behavior, debugging, or clients without meta-tool support. |
+| `/v1/ep_abc123/default` | Legacy alias | Same as the promoted server name for `--mcp-cmd` / `--mcp-url` single-server tunnels. | Backward compatibility only. |
+
 ## Start a multiplexed tunnel
 
 Use `--mcp-auto` to read your existing Cursor, Claude Desktop, or Codex `mcp.json` and publish every stdio server through one tunnel:
@@ -39,14 +49,6 @@ mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
 The CLI detects configured servers and registers them with the gateway. Each server gets its own public HTTP/SSE path automatically.
 
 You can also add servers manually in the [Dashboard](/app/endpoints) or proxy HTTP upstreams alongside stdio servers on the same endpoint.
-
-## Direct vs. aggregated access
-
-| URL pattern | Behavior |
-|-------------|----------|
-| `/v1/ep_abc123/<server>` | Routes directly to one backend server (name from `--mcp-config`, multiplex, or upstream `serverInfo.name`). |
-| `/v1/ep_abc123/default` | Legacy direct route for single-server `--mcp-cmd` / `--mcp-url` tunnels; aliases to the promoted semantic name when present. |
-| `/v1/ep_abc123` (root) | **Meta server** with semantic aggregation and progressive discovery. Use the named path above for direct backend access. |
 
 ## Meta-tools
 
