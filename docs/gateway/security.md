@@ -20,12 +20,12 @@ By default, MCPZERO records **metadata only** for every tool call:
 - Latency
 - Status code
 
-Request and response bodies are forwarded in-memory. **Free** is designed for metadata-only logging; **Personal** and **Team** include tiered cloud payload storage (see table below). Payload retention enforcement by plan is rolling out — see product pricing for committed retention windows.
+Request and response bodies are forwarded in-memory. **Free**, **Personal**, and **Team** include tiered cloud payload storage (see table below). Payload retention enforcement by plan is rolling out — see product pricing for committed retention windows.
 
 | Plan | Payload storage |
 |------|-----------------|
-| Free | Metadata only |
-| Personal | 48-hour cloud storage |
+| Free | 48-hour cloud storage |
+| Personal | 7-day cloud storage |
 | Team | 30-day cloud storage |
 | Enterprise | Private BYO storage (S3 / R2 / OSS) |
 

@@ -125,7 +125,7 @@ Docker-based cross-compile is supported — see the CLI `Makefile`.
 
 ```bash
 mcpzero version
-# mcpzero 0.0.0-dev
+# mcpzero 0.2.1
 ```
 
 ## Next

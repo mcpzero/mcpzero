@@ -5,7 +5,6 @@ description: Core concepts — endpoints, tunnels, aggregation, API keys, and th
 
 MCPZERO is a **secure MCP aggregation gateway**. It turns local stdio MCP servers into remote HTTP endpoints that AI clients like Cursor can call — with semantic aggregation, progressive discovery, and zero-trust security built in.
 
-> **Gateway vs. product:** **MCPZERO** is the product (CLI, Dashboard, Docs). The **Gateway** at `https://gw.mcpzero.io` is the edge runtime that authenticates API keys, exposes the meta server, forwards JSON-RPC, and writes the activity ledger.
 
 ## Core concepts
 
@@ -29,7 +28,28 @@ Get from zero to a working meta server test:
 1. **Sign in** at [mcpzero.io/app/register](/app/register)
 2. **Create an endpoint** in the Dashboard (note the endpoint ID, e.g. `ep_abc123`)
 3. **Install & login CLI** — see [Install](/docs/cli/install/) then `mcpzero login`
-4. **Start tunnel** — `mcpzero tunnel start --endpoint ep_abc123 --mcp-auto` (reads your `mcp.json`)
+4. **Start tunnel** — copy the [sample `mcp.json`](https://github.com/mcpzero/mcpzero/blob/main/examples/quickstart/mcp.json) (or save it as `./mcp.json` next to your project), then run:
+
+   ```bash
+   mcpzero tunnel start --endpoint ep_abc123 --mcp-config ./mcp.json
+   ```
+
+   Example config (two stdio servers — filesystem + Playwright):
+
+   ```json
+   {
+     "mcpServers": {
+       "playwright-headless": {
+         "command": "npx",
+         "args": ["@playwright/mcp@latest"]
+       },
+       "local-fs-tmp": {
+         "command": "npx",
+         "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+       }
+     }
+   }
+   ```
 5. **Create an API key** — [Dashboard → API Keys](/app/api-keys) (`mz_live_…`)
 6. **Configure Cursor** — point at the **endpoint root** (recommended):
 

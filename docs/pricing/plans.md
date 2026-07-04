@@ -18,7 +18,7 @@ MCPZERO offers the same secure gateway at every tier. You pay for tunnels, aggre
 | **Progressive discovery** (within one endpoint) | Yes | Yes | Yes | Yes |
 | **Cross-endpoint aggregation & discovery** | — | — | Yes | Yes |
 | **Traffic visualization** | Yes | Yes | Yes | Yes |
-| **Cloud payload storage** | — | 48 hours | 30 days | Private BYO |
+| **Cloud payload storage** | 48 hours | 7 days | 30 days | Private BYO |
 | **Searchable / exportable audit logs** | — | — | Yes | Yes |
 | **Rate limit** | 30 / min | 30 / min | 60 / min per endpoint | Custom |
 | **Semantic WAF** *(Roadmap)* | — | — | — | Yes |
@@ -33,11 +33,11 @@ MCPZERO offers the same secure gateway at every tier. You pay for tunnels, aggre
 
 ### Free
 
-For developers exploring MCP aggregation. One tunnel with up to 5 servers and 50 tools total across the account. Semantic aggregation and progressive discovery at the endpoint root. Metadata logging and traffic visualization.
+For developers exploring MCP aggregation. One tunnel with up to 5 servers and 50 tools total across the account. Semantic aggregation and progressive discovery at the endpoint root. **48-hour** cloud payload storage and traffic visualization.
 
 ### Personal
 
-For individuals who need short-term payload history. Two tunnels, each supporting up to 5 servers and 50 aggregated tools. Includes 48-hour cloud storage for request/response payloads. Does not include cross-endpoint aggregation or team collaboration.
+For individuals who need payload history. Two tunnels, each supporting up to 5 servers and 50 aggregated tools. Includes **7-day** cloud storage for request/response payloads. Does not include cross-endpoint aggregation or team collaboration.
 
 ### Team
 
