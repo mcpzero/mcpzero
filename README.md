@@ -33,7 +33,7 @@ your MCP servers (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ aggrega
 | **Zero-Config** | Reads your existing `mcp.json` and multiplexes every local stdio server through one encrypted tunnel — no domains, TLS, or hosting to manage. |
 | **Zero-Trust** | Every public endpoint is enforced at the edge. Clients authenticate with `Authorization: Bearer`; auth resolves in under 5ms and the protocol surface of your tools is never exposed to the internet. |
 | **Zero-Leak** | The gateway forwards in-memory and persists metadata only (tool, latency, status). Request/response bodies are never stored by default — stream full audit logs to your own S3 / R2 / OSS on paid tiers. |
-｜ **Zero-Friction** ｜ The Semantic progressive discovery of tools reduces token usage and 'context bloat' ｜
+| **Zero-Friction** | The Semantic progressive discovery of tools reduces token usage and 'context bloat' |
 
 
 ![Architecture](assets/arch.png)
