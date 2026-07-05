@@ -46,9 +46,10 @@ public path; the endpoint root becomes a **meta server** that routes tool calls
 to the correct backend.
 
 ```bash
-mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
+mcpzero tunnel start --endpoint ep_abc123 --mcp-config ./mcp.json
 # reads mcp.json → postgres, filesystem, puppeteer — one tunnel, many servers
 ```
+See [example `mcp.json` file](examples/quickstart/mcp.json)
 
 See [Semantic aggregation](https://mcpzero.io/docs/gateway/semantic-aggregation/).
 

@@ -318,7 +318,10 @@ func startForeground(p startParams) error {
 	}
 
 	fmt.Fprintf(os.Stderr, "connecting to %s/tunnel/%s …\n", p.gwBase, p.endpointID)
-	return client.Run(ctx)
+	if err := client.Run(ctx); err != nil {
+		return auth.HandleAuthRevocation(err)
+	}
+	return nil
 }
 
 // loadAndSelectServers parses an --mcp-config file and resolves which servers
@@ -538,6 +541,7 @@ func tunnelDaemonRun(args []string) error {
 	}
 
 	runErr := client.Run(ctx)
+	runErr = auth.HandleAuthRevocation(runErr)
 
 	// A gateway-initiated close (e.g. replaced by a newer tunnel) is a normal
 	// stop; anything else is an error. In all cases client.Run has already

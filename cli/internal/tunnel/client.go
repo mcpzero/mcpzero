@@ -851,6 +851,9 @@ func disconnectReason(err error) string {
 func classifyDisconnect(err error, reason string) *DisconnectError {
 	var ce *websocket.CloseError
 	if errors.As(err, &ce) {
+		if strings.Contains(strings.ToLower(ce.Text), "cli_token_revoked") {
+			return &DisconnectError{Msg: reason, Terminal: true}
+		}
 		switch ce.Code {
 		case websocket.CloseNormalClosure, websocket.CloseGoingAway:
 			// Gateway deliberately ended the tunnel (e.g. replaced).
