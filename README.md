@@ -85,7 +85,7 @@ curl -fsSL https://mcpzero.io/install-cli.sh | sh`
 # or: pipx install mcpzero-cli
 mcpzero version
 mcpzero login
-mcpzero tunnel start --mcp-cmd "npx -y @modelcontextprotocol/server-filesystem /tmp"
+mcpzero init
 ```
 
 The CLI source lives in [`cli/`](./cli/); see its [README](./cli/README.md) for

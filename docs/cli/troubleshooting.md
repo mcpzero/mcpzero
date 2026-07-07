@@ -73,10 +73,16 @@ The CLI refresh token user does not own this endpoint. Create a new endpoint und
 
 ## Cursor sees tools but calls fail
 
-- Check [Ledger](/app/ledger) for `auth_denied`, `tunnel_offline`, or `mcp_error`
+- Check [Activity](/app/activity) for `auth_denied`, `tunnel_offline`, or `mcp_error`
 - Open the trace detail page for request/response payloads
 
 ## Still stuck?
 
+Run `mcpzero doctor` for a structured check of login, dashboard/gateway
+reachability, CLI token validity, endpoints, and Cursor config. Use
+`mcpzero whoami --limits` to confirm plan quotas (endpoints, rate limit,
+payload retention).
+
+- Review [Doctor](/docs/cli/doctor/)
 - Review [Overview](/docs/getting-started/overview/) architecture
 - Local E2E checklist: repo `docs/phase1-e2e.md`

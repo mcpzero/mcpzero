@@ -30,6 +30,13 @@ Windows, pinned versions, manual downloads, and checksums are covered in the
 
 ```bash
 mcpzero login          # browser login
+mcpzero init           # interactive onboarding (endpoint, API key, Cursor, tunnel)
+```
+
+Or set up step by step:
+
+```bash
+mcpzero login
 
 # Expose a local stdio MCP server through a Dashboard endpoint:
 mcpzero tunnel start \
@@ -48,6 +55,11 @@ servers auto-discovered from your installed AI agents (`--mcp-auto`). Run
 | Command | Description |
 |---------|-------------|
 | `mcpzero login` / `logout` / `whoami` | Manage browser-based credentials |
+| `mcpzero whoami --limits` | Show plan quotas and limits |
+| `mcpzero doctor` | Diagnose login, connectivity, and setup |
+| `mcpzero init` | Interactive onboarding (endpoint, API key, Cursor, tunnel) |
+| `mcpzero init -y` | Non-interactive setup (flags/defaults) |
+| `mcpzero cursor add` | Add MCPZERO endpoint to Cursor `mcp.json` |
 | `mcpzero version` | Print the CLI version |
 | `mcpzero tunnel start [-d]` | Start a tunnel (`-d` runs it in the background) |
 | `mcpzero tunnel list` | List background tunnels |

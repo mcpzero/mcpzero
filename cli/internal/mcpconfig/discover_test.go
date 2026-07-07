@@ -24,7 +24,8 @@ func TestDiscoverAcrossAgents(t *testing.T) {
 	writeFile(t, filepath.Join(home, ".cursor", "mcp.json"), `{
       "mcpServers": {
         "filesystem": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]},
-        "git": {"command": "uvx", "args": ["mcp-server-git"]}
+        "git": {"command": "uvx", "args": ["mcp-server-git"]},
+        "mcpzero": {"url": "https://gw.mcpzero.io/v1/ep_init", "headers": {"Authorization": "Bearer mz_live_x"}}
       }
     }`)
 
@@ -42,14 +43,21 @@ func TestDiscoverAcrossAgents(t *testing.T) {
       }
     }`)
 
-	specs, err := discoverIn(home, work)
+	specs, skipped, err := discoverIn(home, work)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if skipped != 1 {
+		t.Fatalf("expected 1 skipped gateway URL, got %d", skipped)
 	}
 
 	byName := map[string]ServerSpec{}
 	for _, s := range specs {
 		byName[s.Name] = s
+	}
+
+	if findByRaw(specs, "mcpzero") != nil {
+		t.Fatal("mcpzero gateway client URL should be skipped during discover")
 	}
 
 	// git should appear once (deduped) with both sources recorded.
@@ -82,10 +90,28 @@ func TestDiscoverAcrossAgents(t *testing.T) {
 	}
 }
 
+func TestDiscoverSkipsPublishedGatewayOnly(t *testing.T) {
+	home := t.TempDir()
+	work := t.TempDir()
+	writeFile(t, filepath.Join(home, ".cursor", "mcp.json"), `{
+      "mcpServers": {
+        "mcpzero": {"url": "https://gw.mcpzero.io/v1/ep_only"}
+      }
+    }`)
+
+	_, skipped, err := discoverIn(home, work)
+	if err == nil {
+		t.Fatal("expected error when only gateway client URLs exist")
+	}
+	if skipped != 1 {
+		t.Fatalf("skipped = %d, want 1", skipped)
+	}
+}
+
 func TestDiscoverNothingFound(t *testing.T) {
 	home := t.TempDir()
 	work := t.TempDir()
-	if _, err := discoverIn(home, work); err == nil {
+	if _, _, err := discoverIn(home, work); err == nil {
 		t.Fatal("expected error when no agent configs exist")
 	}
 }

@@ -96,6 +96,7 @@ func tunnelStart(args []string) error {
 	detachShort := fs.Bool("d", false, "run the tunnel in the background (shorthand)")
 	force := fs.Bool("force", false, "start even if another tunnel is already running for this endpoint")
 	forceShort := fs.Bool("f", false, "shorthand for --force")
+	skipPreflight := fs.Bool("skip-preflight", false, "skip preflight checks (gateway reachability, auth, endpoint ownership)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -158,6 +159,17 @@ func tunnelStart(args []string) error {
 
 	if err := checkSelfReference(resolvedGWBase, *endpointID, selectedServers); err != nil {
 		return err
+	}
+
+	if !*skipPreflight {
+		if err := runTunnelPreflight(context.Background(), tunnelPreflightInput{
+			EndpointID: *endpointID,
+			GWBase:     resolvedGWBase,
+			MgmtKey:    mgmtKeyValue,
+			Servers:    selectedServers,
+		}); err != nil {
+			return err
+		}
 	}
 
 	p := startParams{
@@ -348,9 +360,12 @@ func discoverAndSelectServers(preselected []string) ([]mcpconfig.ServerSpec, err
 	if err != nil {
 		workDir = ""
 	}
-	specs, err := mcpconfig.Discover(workDir)
+	specs, skipped, err := mcpconfig.Discover(workDir)
 	if err != nil {
 		return nil, err
+	}
+	if skipped > 0 {
+		fmt.Fprintf(os.Stderr, "skipped %d remote MCPZERO gateway URL(s) (client targets, not tunnel sources)\n", skipped)
 	}
 	fmt.Fprintf(os.Stderr, "discovered %d MCP server(s) from agent configs\n", len(specs))
 	selected, err := mcpconfig.SelectServers(specs, preselected, os.Stdin, os.Stderr)
@@ -472,9 +487,19 @@ func startDetached(p startParams) error {
 	fmt.Printf("\n")
 	printEndpointURLs(p.gwBase, p.endpointID, specNames(p.servers))
 	fmt.Printf("\n")
-	fmt.Printf("  mcpzero tunnel logs %s -f   # follow logs\n", s.Hash)
-	fmt.Printf("  mcpzero tunnel stop %s      # stop tunnel\n", s.Hash)
+	printBackgroundTunnelHelp(s.Hash, p.endpointID)
 	return nil
+}
+
+func printBackgroundTunnelHelp(tunnelID, endpointID string) {
+	fmt.Printf("Background tunnel is running — this terminal is free.\n\n")
+	fmt.Printf("  mcpzero tunnel attach %s   # watch logs in foreground (Ctrl-C detaches; tunnel keeps running)\n", tunnelID)
+	fmt.Printf("  mcpzero tunnel logs %s -f  # same as attach\n", tunnelID)
+	fmt.Printf("  mcpzero tunnel stop %s     # stop background tunnel\n", tunnelID)
+	fmt.Printf("\n")
+	fmt.Printf("To run in the foreground instead (this terminal owns the tunnel until Ctrl-C):\n")
+	fmt.Printf("  mcpzero tunnel stop %s\n", tunnelID)
+	fmt.Printf("  mcpzero tunnel start --endpoint %s --mcp-auto\n", endpointID)
 }
 
 func tunnelDaemonRun(args []string) error {

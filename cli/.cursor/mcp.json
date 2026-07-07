@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "bundle": {
+      "url": "https://gw-dev.mcpzero.io/v1/ep_bb935c8c6e",
+      "headers": {
+        "Authorization": "Bearer mz_live_2d56a4fbdc214f36a4e87025c42f3a22"
+      }
+    }
+  }
+}

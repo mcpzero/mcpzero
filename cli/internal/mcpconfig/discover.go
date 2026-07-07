@@ -84,18 +84,19 @@ func claudeDesktopCandidate(home string) candidate {
 // directory and the given working directory, returning a de-duplicated, name-
 // unique list of MCP servers across all of them. Each spec is tagged with the
 // agent(s) it was found in. Missing or malformed files are skipped.
-func Discover(workDir string) ([]ServerSpec, error) {
+func Discover(workDir string) ([]ServerSpec, int, error) {
 	home, _ := os.UserHomeDir()
 	return discoverIn(home, workDir)
 }
 
 // discoverIn is Discover with an explicit home directory (for testing).
-func discoverIn(home, workDir string) ([]ServerSpec, error) {
+func discoverIn(home, workDir string) ([]ServerSpec, int, error) {
 	candidates := buildCatalog(home, workDir)
 
 	used := make(map[string]int) // slug -> dedup counter (global uniqueness)
 	seen := make(map[string]int) // signature -> index into result
 	var result []ServerSpec
+	var skippedPublished int
 
 	for _, cand := range candidates {
 		data, err := os.ReadFile(cand.path)
@@ -112,6 +113,10 @@ func discoverIn(home, workDir string) ([]ServerSpec, error) {
 			if err != nil {
 				continue // skip individual malformed entries
 			}
+			if spec.IsHTTP() && IsPublishedGatewayMCPURL(spec.URL) {
+				skippedPublished++
+				continue
+			}
 			sig := spec.signature()
 			if idx, ok := seen[sig]; ok {
 				// Same server in another agent's config: record the extra source.
@@ -127,12 +132,18 @@ func discoverIn(home, workDir string) ([]ServerSpec, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, fmt.Errorf(
+		if skippedPublished > 0 {
+			return nil, skippedPublished, fmt.Errorf(
+				"no local MCP servers found in agent configs (%d remote MCPZERO gateway URL(s) skipped — those are Cursor client targets, not tunnel sources)",
+				skippedPublished,
+			)
+		}
+		return nil, 0, fmt.Errorf(
 			"no MCP servers found in known agent configs under %s or %s",
 			displayHome(home), workDir,
 		)
 	}
-	return result, nil
+	return result, skippedPublished, nil
 }
 
 // mergeSource appends an additional source agent to a comma-separated list,

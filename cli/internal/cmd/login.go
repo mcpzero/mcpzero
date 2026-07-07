@@ -45,15 +45,3 @@ func logout(_ []string) error {
 	fmt.Fprintln(os.Stdout, "Logged out.")
 	return nil
 }
-
-func whoami(_ []string) error {
-	creds, err := auth.LoadCredentials()
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(os.Stdout, "email: %s\n", creds.Email)
-	fmt.Fprintf(os.Stdout, "user_id: %s\n", creds.UserID)
-	fmt.Fprintf(os.Stdout, "gw_base: %s\n", creds.GWBase)
-	fmt.Fprintf(os.Stdout, "web_base: %s\n", creds.WebBase)
-	return nil
-}

@@ -24,7 +24,19 @@ MCPZERO is a **secure MCP aggregation gateway**. It turns local MCP servers into
 
 ## One-minute setup
 
-Get from zero to a working meta server test:
+**Recommended:** use the interactive CLI wizard after install:
+
+```bash
+mcpzero login
+mcpzero init
+```
+
+`init` walks you through endpoint, API key, Cursor `mcp.json`, and an optional
+tunnel. See [Init (onboarding)](/docs/cli/init/).
+
+### Manual setup
+
+Get from zero to a working meta server test without the wizard:
 
 1. **Sign in** at [mcpzero.io/app/register](/app/register)
 2. **Create an endpoint** in the Dashboard (note the endpoint ID, e.g. `ep_abc123`)
@@ -78,12 +90,20 @@ Free includes semantic aggregation and progressive discovery on a single endpoin
 
 ## Typical workflow
 
+1. **Install CLI** — [Install](/docs/cli/install/)
+2. **Login** — `mcpzero login`
+3. **Onboard** — `mcpzero init` (endpoint, API key, Cursor, tunnel)
+4. **Use Cursor** — tools call through `https://gw.mcpzero.io/v1/ep_…`
+5. **Inspect calls** — [Dashboard → Activity](/app/activity)
+
+Or configure step-by-step in the Dashboard:
+
 1. **Sign in** at [mcpzero.io/app/register](/app/register)
 2. **Create an endpoint** in the Dashboard (note the endpoint ID)
-3. **Login CLI** — `mcpzero login` (browser flow, no manual token copy)
-4. **Start tunnel** — `mcpzero tunnel start --endpoint ep_… --mcp-auto` (reads your mcp.json)
+3. **Login CLI** — `mcpzero login`
+4. **Start tunnel** — `mcpzero tunnel start --endpoint ep_… --mcp-auto`
 5. **Get an API key** — [Dashboard → API Keys](/app/api-keys)
-6. **Configure Cursor** — point at the **endpoint root** URL + your API key (see [Cursor setup](/docs/cli/cursor/))
+6. **Configure Cursor** — [Cursor setup](/docs/cli/cursor/) or `mcpzero cursor add`
 7. **Inspect calls** — [Dashboard → Activity](/app/activity)
 
 ## Architecture
@@ -111,6 +131,7 @@ mcpzero CLI  ←→  local MCP servers (stdio)
 - [Semantic aggregation](/docs/gateway/semantic-aggregation/)
 - [Progressive discovery](/docs/gateway/progressive-discovery/)
 - [Endpoint clusters](/docs/gateway/endpoint-clusters/)
+- [Init (onboarding)](/docs/cli/init/)
 - [Install the CLI](/docs/cli/install/)
 - [Login and start a tunnel](/docs/cli/tunnel/)
 - [Configure Cursor](/docs/cli/cursor/)

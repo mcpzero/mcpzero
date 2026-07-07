@@ -33,14 +33,14 @@ func checkSelfReference(gwBase, endpointID string, specs []mcpconfig.ServerSpec)
 		if !spec.IsHTTP() {
 			continue
 		}
+		if mcpconfig.EndpointIDFromGatewayURL(spec.URL) != endpointID {
+			continue
+		}
 		u, err := url.Parse(spec.URL)
 		if err != nil {
 			continue
 		}
 		if !strings.EqualFold(u.Hostname(), gwURL.Hostname()) {
-			continue
-		}
-		if endpointFromPath(u.Path) != endpointID {
 			continue
 		}
 		return fmt.Errorf(
@@ -54,22 +54,10 @@ func checkSelfReference(gwBase, endpointID string, specs []mcpconfig.ServerSpec)
 	return nil
 }
 
-// endpointFromPath extracts the endpoint id from a gateway MCP URL path,
-// supporting both the canonical /v1/<id>[/<server>] and the legacy
-// /v1/endpoints/<id>[/<server>] forms. Returns "" when the path is not a
-// gateway MCP path.
+// endpointFromPath extracts the endpoint id from a gateway MCP URL path.
+// Deprecated: use mcpconfig.EndpointIDFromGatewayURL for full URL parsing.
 func endpointFromPath(p string) string {
-	parts := strings.Split(strings.Trim(p, "/"), "/")
-	if len(parts) < 2 || parts[0] != "v1" {
-		return ""
-	}
-	if parts[1] == "endpoints" {
-		if len(parts) < 3 {
-			return ""
-		}
-		return parts[2]
-	}
-	return parts[1]
+	return mcpconfig.EndpointIDFromGatewayURL("https://gw.example.com" + p)
 }
 
 // namedUpstreamsFromSpecs builds tunnel upstreams from selected config specs.

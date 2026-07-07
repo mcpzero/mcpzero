@@ -20,6 +20,12 @@ func Execute(args []string) error {
 		return logout(args[1:])
 	case "whoami":
 		return whoami(args[1:])
+	case "init":
+		return runInit(args[1:])
+	case "cursor":
+		return runCursor(args[1:])
+	case "doctor":
+		return runDoctor(args[1:])
 	case "tunnel":
 		return runTunnel(args[1:])
 	case "version", "-v", "--version":
@@ -40,6 +46,11 @@ Usage:
   mcpzero login                  Browser login (opens dashboard)
   mcpzero logout                 Clear local credentials
   mcpzero whoami                 Show logged-in user
+  mcpzero whoami --limits        Show plan quotas and limits
+  mcpzero doctor                 Diagnose login, connectivity, and setup
+  mcpzero init                   Interactive setup (endpoint, API key, Cursor, tunnel)
+  mcpzero init -y                Non-interactive setup (flags/defaults)
+  mcpzero cursor add             Add MCPZERO endpoint to Cursor mcp.json
   mcpzero version                Print version
 
 Tunnels:

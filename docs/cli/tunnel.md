@@ -63,6 +63,7 @@ returns `text/event-stream` to clients that send `Accept: text/event-stream`.
 | `--gw-base` | No | Gateway URL (default `https://gw.mcpzero.io`) |
 | `--detach`, `-d` | No | Run the tunnel in the background as a managed daemon |
 | `--force`, `-f` | No | Start even if another tunnel is already running for this endpoint |
+| `--skip-preflight` | No | Skip gateway/auth/ownership checks before connecting |
 
 Exactly one of `--mcp-cmd`, `--mcp-url`, `--mcp-config`, or `--mcp-auto` is required. `--mcp-config` and `--mcp-auto` are mutually exclusive and cannot be combined with `--mcp-cmd` or `--mcp-url`.
 
@@ -75,6 +76,13 @@ Exactly one of `--mcp-cmd`, `--mcp-url`, `--mcp-config`, or `--mcp-auto` is requ
 > `--force` to override.
 
 \* After `mcpzero login`, the CLI sends a refresh token on register instead of `--mgmt-key`.
+
+### Preflight checks
+
+Before connecting, `tunnel start` runs lightweight checks: gateway `/health`,
+login (or `--mgmt-key`), endpoint ID format, and endpoint ownership. Failures
+include hints such as `run: mcpzero doctor`. Use `--skip-preflight` to bypass
+when you know the environment is already valid.
 
 ### Upstream auth & secrets
 
@@ -136,6 +144,8 @@ mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
 
 The CLI prints how many servers it found in agent configs, lists them with source tags (`[cursor]`, `[project]`, …), and asks which to tunnel.
 
+**Note:** `--mcp-auto` skips HTTP entries that already point at a MCPZERO gateway URL (`/v1/ep_…` or `/v1/epc_…`). Those are Cursor **client targets** (including entries written by `mcpzero init` / `cursor add`), not local servers to publish.
+
 ### Example CLI output (`--mcp-auto`)
 
 ```
@@ -144,7 +154,7 @@ Select which MCP servers to start:
   [1] docker-fs [cursor] -> https://gw.mcpzero.io/v1/ep_34e06ce26b
   [2] docker-fs-3 [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9/local-fs-tmp
   [3] local-fs-tmp [cursor] -> npx -y @modelcontextprotocol/server-filesystem /tmp
-  [4] local-mcpzero-bundle [cursor] -> http://127.0.0.1:7901/v1/epc_2b94b1088a  ← cluster URL (client target, not a tunnel)
+  [4] local-mcpzero-bundle [cursor] -> http://127.0.0.1:7901/v1/epc_2b94b1088a  ← would be skipped by --mcp-auto (client target)
   [5] mcpzero-bundle [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9
   [6] playwright-headless [cursor] -> https://gw.mcpzero.io/v1/ep_0476da16c9/playwright-headless
   [7] local-fs-tmp (as "local-fs-tmp-2") [project] -> npx -y @modelcontextprotocol/server-filesystem /path/to/tmp

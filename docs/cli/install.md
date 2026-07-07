@@ -27,6 +27,7 @@ checksum, and installs `mcpzero` to `~/.local/bin` (falling back to
 ```bash
 mcpzero version
 mcpzero login
+mcpzero init
 ```
 
 <details>
@@ -130,5 +131,6 @@ mcpzero version
 
 ## Next
 
+- [Init (onboarding)](/docs/cli/init/)
 - [Login with your browser](/docs/cli/login/)
 - [Start a tunnel](/docs/cli/tunnel/)

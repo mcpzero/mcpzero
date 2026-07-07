@@ -359,9 +359,6 @@ func logRemoteURLs(gwBase, endpointID string, serverNames []string) {
 		fmt.Fprintf(os.Stderr, "remote MCP URLs:\n")
 		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s\n", "(meta)", base, endpointID)
 		fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/%s\n", name, base, endpointID, name)
-		if name != DefaultServerName {
-			fmt.Fprintf(os.Stderr, "  %-20s %s/v1/%s/default\n", "(legacy)", base, endpointID)
-		}
 		return
 	}
 	if len(serverNames) == 0 {

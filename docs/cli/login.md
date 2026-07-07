@@ -9,7 +9,16 @@ description: Authenticate the CLI with your MCPZERO account using a browser flow
 
 ```bash
 mcpzero login
+mcpzero init          # interactive onboarding (recommended)
 mcpzero whoami
+```
+
+Or set up manually:
+
+```bash
+mcpzero login
+mcpzero whoami
+mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
 ```
 
 Credentials are stored at:
@@ -34,7 +43,25 @@ File permissions are `0600`. The refresh token is valid for **90 days** (rolling
 |---------|-------------|
 | `mcpzero login` | Browser login |
 | `mcpzero whoami` | Show saved user |
+| `mcpzero whoami --limits` | Show plan quotas (endpoints, rate limit, retention) |
 | `mcpzero logout` | Delete local credentials |
+
+### Plan limits
+
+```bash
+mcpzero whoami --limits
+```
+
+Example output:
+
+```text
+plan: free
+personal endpoints: 1/1
+rate limit: 30 req/min per endpoint
+payload retention: 48 hours
+max tools per tunnel: 50
+endpoint clusters: no (Team+ required)
+```
 
 ## No browser (containers / remote shells)
 
@@ -69,4 +96,6 @@ A single key can register a tunnel for any endpoint you own.
 
 ## Next
 
+- [Doctor](/docs/cli/doctor/) — diagnose login and connectivity
+- [Init (onboarding)](/docs/cli/init/) — endpoint, API key, Cursor, tunnel in one wizard
 - [Start a tunnel](/docs/cli/tunnel/)
