@@ -99,8 +99,11 @@ jobs:
           node-version: "24" # ships npm >= 11.5.1, required for OIDC publishing
           registry-url: "https://registry.npmjs.org"
 
-      - name: Upgrade npm (ensure OIDC support)
-        run: npm install -g npm@latest
+      - name: Upgrade npm (OIDC + provenance)
+        # Pin npm 11.x: npm@latest (12.0.0) ships without bundled `sigstore`, so
+        # `npm publish` with provenance fails MODULE_NOT_FOUND (npm/cli#9722).
+        # npm >= 11.5.1 is still required for Trusted Publishing / OIDC.
+        run: npm install -g npm@11
 
       - name: Set up Python (for PyPI publish)
         if: env.PYPI_API_TOKEN != ''
