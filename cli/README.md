@@ -57,6 +57,7 @@ servers auto-discovered from your installed AI agents (`--mcp-auto`). Run
 | `mcpzero login` / `logout` / `whoami` | Manage browser-based credentials |
 | `mcpzero whoami --limits` | Show plan quotas and limits |
 | `mcpzero doctor` | Diagnose login, connectivity, and setup |
+| `mcpzero watch` | Tail cloud Activity (poll) |
 | `mcpzero init` | Interactive onboarding (endpoint, API key, Cursor, tunnel) |
 | `mcpzero init -y` | Non-interactive setup (flags/defaults) |
 | `mcpzero cursor add` | Add MCPZERO endpoint to Cursor `mcp.json` |

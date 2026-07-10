@@ -28,13 +28,17 @@ func whoami(args []string) error {
 	fmt.Fprintf(os.Stdout, "gw_base: %s\n", creds.GWBase)
 	fmt.Fprintf(os.Stdout, "web_base: %s\n", creds.WebBase)
 
+	web := firstNonEmpty(creds.WebBase, config.DefaultWebBase)
+	client := cloud.NewClient(web, creds.RefreshToken)
+	me, err := client.Me(context.Background())
+	if err == nil {
+		printWhoamiTeams(me)
+	}
+
 	if !*showLimits {
 		return nil
 	}
 
-	web := firstNonEmpty(creds.WebBase, config.DefaultWebBase)
-	client := cloud.NewClient(web, creds.RefreshToken)
-	me, err := client.Me(context.Background())
 	if err != nil {
 		return fmt.Errorf("fetch account limits: %w", err)
 	}

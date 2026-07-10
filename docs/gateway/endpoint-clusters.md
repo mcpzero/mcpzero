@@ -34,6 +34,13 @@ The cluster meta server does not replace member endpoints. Each `ep_*` keeps its
 
 ## Create a cluster
 
+Fastest path: open [Dashboard → Team → Clusters](/app/team/clusters) and use
+**Quick setup** — pick your team endpoints, create the cluster, mint an API key,
+and copy the Cursor `mcp.json` snippet in one step. Owners get a cluster-wide
+key; members get endpoint-scoped keys.
+
+Manual path:
+
 1. Subscribe to **Team** (or Enterprise) and create a team in [Dashboard → Team](/app/team).
 2. Open [Dashboard → Team → Clusters](/app/team/clusters).
 3. **Create a cluster** — give it a name (e.g. `Production agents`). MCPZERO assigns an ID like `epc_2b94b1088a`.

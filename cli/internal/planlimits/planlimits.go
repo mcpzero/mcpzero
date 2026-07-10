@@ -3,6 +3,7 @@ package planlimits
 import "strings"
 
 // Display helpers mirroring saas/packages/shared/src/plan-limits.ts and plan-limit.md.
+// -1 means unlimited.
 
 func normalizePlan(plan string) string {
 	switch strings.ToLower(strings.TrimSpace(plan)) {
@@ -17,10 +18,23 @@ func MaxEndpoints(plan string) int {
 	switch normalizePlan(plan) {
 	case "personal":
 		return 2
-	case "team", "enterprise":
+	case "team":
 		return 10
+	case "enterprise":
+		return -1
 	default:
 		return 1
+	}
+}
+
+func MaxServersPerEndpoint(plan string) int {
+	switch normalizePlan(plan) {
+	case "team":
+		return 10
+	case "enterprise":
+		return -1
+	default:
+		return 5
 	}
 }
 
@@ -33,7 +47,7 @@ func RateLimitRPM(plan string) int {
 	}
 }
 
-func MaxToolsPerTunnel(plan string) int {
+func MaxTools(plan string) int {
 	switch normalizePlan(plan) {
 	case "team":
 		return 200
@@ -42,6 +56,18 @@ func MaxToolsPerTunnel(plan string) int {
 	default:
 		return 50
 	}
+}
+
+// MaxToolsPerTunnel is kept for callers; Free is account-wide (see ToolsScope).
+func MaxToolsPerTunnel(plan string) int {
+	return MaxTools(plan)
+}
+
+func ToolsScope(plan string) string {
+	if normalizePlan(plan) == "free" {
+		return "account"
+	}
+	return "tunnel"
 }
 
 func ClustersEnabled(plan string) bool {
@@ -60,12 +86,15 @@ func PayloadRetentionLabel(plan string) string {
 	}
 }
 
-func FormatToolsLimit(plan string) string {
-	n := MaxToolsPerTunnel(plan)
+func FormatLimit(n int) string {
 	if n < 0 {
 		return "unlimited"
 	}
 	return stringInt(n)
+}
+
+func FormatToolsLimit(plan string) string {
+	return FormatLimit(MaxTools(plan))
 }
 
 func stringInt(n int) string {

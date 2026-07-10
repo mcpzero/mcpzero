@@ -93,6 +93,9 @@ func personalEndpointQuota(me *cloud.AccountMe) (used, limit int, canCreate bool
 	}
 	used = me.PersonalEndpoints.Used
 	limit = me.PersonalEndpoints.Limit
+	if limit < 0 {
+		return used, -1, true
+	}
 	if limit <= 0 {
 		limit = 1
 	}

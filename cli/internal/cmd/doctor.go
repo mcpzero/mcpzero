@@ -288,14 +288,38 @@ func doctorUnreachableChecks(webBase, gwBase string) []checkResult {
 func printWhoamiLimits(me *cloud.AccountMe) {
 	plan := me.Plan
 	fmt.Fprintf(os.Stdout, "plan: %s\n", plan)
-	fmt.Fprintf(os.Stdout, "personal endpoints: %d/%d\n", me.PersonalEndpoints.Used, me.PersonalEndpoints.Limit)
+	epLimit := me.PersonalEndpoints.Limit
+	if epLimit < 0 {
+		fmt.Fprintf(os.Stdout, "personal endpoints: %d/unlimited\n", me.PersonalEndpoints.Used)
+	} else {
+		fmt.Fprintf(os.Stdout, "personal endpoints: %d/%d\n", me.PersonalEndpoints.Used, epLimit)
+	}
 	fmt.Fprintf(os.Stdout, "rate limit: %d req/min per endpoint\n", planlimits.RateLimitRPM(plan))
 	fmt.Fprintf(os.Stdout, "payload retention: %s\n", planlimits.PayloadRetentionLabel(plan))
-	fmt.Fprintf(os.Stdout, "max tools per tunnel: %s\n", planlimits.FormatToolsLimit(plan))
+	fmt.Fprintf(os.Stdout, "max servers per endpoint: %s\n", planlimits.FormatLimit(planlimits.MaxServersPerEndpoint(plan)))
+	if planlimits.ToolsScope(plan) == "account" {
+		fmt.Fprintf(os.Stdout, "max tools (account total): %s\n", planlimits.FormatToolsLimit(plan))
+	} else {
+		fmt.Fprintf(os.Stdout, "max tools per tunnel: %s\n", planlimits.FormatToolsLimit(plan))
+	}
 	if planlimits.ClustersEnabled(plan) {
 		fmt.Fprintln(os.Stdout, "endpoint clusters: yes (Team+)")
 	} else {
 		fmt.Fprintln(os.Stdout, "endpoint clusters: no (Team+ required)")
+	}
+}
+
+func printWhoamiTeams(me *cloud.AccountMe) {
+	if len(me.Teams) == 0 {
+		return
+	}
+	fmt.Fprintln(os.Stdout, "teams:")
+	for _, t := range me.Teams {
+		marker := " "
+		if t.ID == me.ActiveTeamID {
+			marker = "*"
+		}
+		fmt.Fprintf(os.Stdout, "  %s %s (%s) role=%s\n", marker, t.Name, t.ID, t.Role)
 	}
 }
 

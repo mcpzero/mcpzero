@@ -21,6 +21,7 @@ MCPZERO lets teams **share MCP capabilities** — expose local tools through gov
 3. A developer starts a multiplexed tunnel: `mcpzero tunnel start --endpoint ep_… --mcp-auto`
 4. Each member configures Cursor at the **endpoint root** URL with their own API key.
 5. Everyone inspects traffic in [Dashboard → Activity](/app/activity) — tool names, latency, and (on paid plans) payloads.
+6. On **Team+**, use **Export NDJSON** on Activity to download matching rows as a zip (up to 5,000 rows; download link expires in 24 hours).
 
 Members inherit the team owner's plan tier for gateway limits (cross-endpoint features, rate limits, etc.).
 

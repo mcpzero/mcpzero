@@ -76,13 +76,30 @@ The CLI refresh token user does not own this endpoint. Create a new endpoint und
 - Check [Activity](/app/activity) for `auth_denied`, `tunnel_offline`, or `mcp_error`
 - Open the trace detail page for request/response payloads
 
+## Rate limited (HTTP 429)
+
+Gateway returns `X-MCP0-RateLimit-Limit`, `X-MCP0-RateLimit-Remaining`, and
+`X-MCP0-RateLimit-Reset` on MCP responses. Activity rows show status `error`
+with `error_code=rate_limited` (and a **429** badge in the list).
+
+- Free/Personal: 30 req/min per endpoint; Team: 60/min
+- Check quotas: `mcpzero whoami --limits`
+
+## meta_search used keyword fallback
+
+When OpenRouter is unavailable or returns no matchable tools, `meta_search`
+falls back to keyword matching. The tool result includes `"search_mode":"keyword"`,
+the response header `X-MCP0-Search-Mode: keyword`, and Activity marks
+`search_mode:keyword`.
+
 ## Still stuck?
 
 Run `mcpzero doctor` for a structured check of login, dashboard/gateway
 reachability, CLI token validity, endpoints, and Cursor config. Use
 `mcpzero whoami --limits` to confirm plan quotas (endpoints, rate limit,
-payload retention).
+payload retention). Tail live calls with `mcpzero watch`.
 
 - Review [Doctor](/docs/cli/doctor/)
+- Review [Watch](/docs/cli/watch/)
 - Review [Overview](/docs/getting-started/overview/) architecture
 - Local E2E checklist: repo `docs/phase1-e2e.md`

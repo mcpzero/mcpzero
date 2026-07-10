@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mcpzero/mcpzero/cli/internal/mcpconfig"
 	"github.com/mcpzero/mcpzero/cli/internal/upstream"
+	"github.com/mcpzero/mcpzero/cli/internal/version"
 )
 
 const protocolVersion = 2
@@ -138,6 +139,8 @@ type registerMessage struct {
 	// transport. Empty for a single-server tunnel (whose transport is the
 	// top-level Transport field).
 	ServerInfos []registerServerInfo `json:"serverInfos,omitempty"`
+	// CliVersion is the mcpzero CLI build version for Dashboard live status.
+	CliVersion string `json:"cliVersion,omitempty"`
 }
 
 type mcpRequestMessage struct {
@@ -582,6 +585,7 @@ func (c *Client) register(conn *websocket.Conn) error {
 		Servers:         c.serverNames(),
 		ServerInfos:     c.serverInfos(),
 		Capabilities:    []string{"streaming"},
+		CliVersion:      version.Version,
 	}
 	switch {
 	case c.MgmtKey != "":
@@ -823,7 +827,13 @@ func disconnectReason(err error) string {
 		case ce.Code == websocket.CloseAbnormalClosure || ce.Code == websocket.CloseTLSHandshake:
 			// 1006: connection dropped without a proper close frame (network).
 			return fmt.Sprintf("tunnel disconnected unexpectedly (network): %v", err)
-		case ce.Code == websocket.CloseNormalClosure && reason == "replaced_by_new_connection":
+		case ce.Code == websocket.CloseNormalClosure && strings.HasPrefix(reason, "replaced_by_new_connection"):
+			if strings.HasPrefix(reason, "replaced_by_new_connection:") {
+				who := strings.TrimSpace(strings.TrimPrefix(reason, "replaced_by_new_connection:"))
+				if who != "" {
+					return fmt.Sprintf("gateway closed tunnel: replaced by a newer connection (now held by %s)", who)
+				}
+			}
 			return "gateway closed tunnel: replaced by a newer connection to this endpoint"
 		case ce.Code == websocket.ClosePolicyViolation:
 			if reason == "" {

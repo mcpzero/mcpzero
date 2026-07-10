@@ -53,6 +53,12 @@ type AccountMe struct {
 		Used  int `json:"used"`
 		Limit int `json:"limit"`
 	} `json:"personal_endpoints"`
+	Teams []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Role string `json:"role"`
+	} `json:"teams"`
+	ActiveTeamID string `json:"active_team_id"`
 }
 
 type apiError struct {
@@ -149,6 +155,12 @@ func (c *Client) CreateEndpoint(ctx context.Context, name string, teamID *string
 	return &ep, nil
 }
 
+// DeleteEndpoint removes an endpoint the user owns.
+func (c *Client) DeleteEndpoint(ctx context.Context, endpointID string) error {
+	body := map[string]any{"id": endpointID}
+	return c.doJSON(ctx, http.MethodDelete, "/app/api/cli/endpoints", body, nil)
+}
+
 // CreateAPIKey creates an API key scoped to the given endpoint IDs.
 func (c *Client) CreateAPIKey(ctx context.Context, endpointIDs []string) (*APIKeyCreateResult, error) {
 	body := map[string]any{"endpoint_ids": endpointIDs}
@@ -180,4 +192,80 @@ func (c *Client) ListAPIKeys(ctx context.Context) ([]APIKey, error) {
 		return nil, err
 	}
 	return resp.Keys, nil
+}
+
+// ActivityEntry is one usage_ledger row returned by the CLI activity API.
+type ActivityEntry struct {
+	ID         string  `json:"id"`
+	EndpointID string  `json:"endpoint_id"`
+	ToolName   *string `json:"tool_name"`
+	ServerName *string `json:"server_name"`
+	Status     string  `json:"status"`
+	LatencyMs  *int    `json:"latency_ms"`
+	ClientIP   *string `json:"client_ip"`
+	CreatedAt  string  `json:"created_at"`
+	TraceURL   string  `json:"trace_url"`
+}
+
+// ActivityListOptions filters GET /app/api/cli/activity.
+type ActivityListOptions struct {
+	Limit      int
+	After      string // created_at cursor (exclusive)
+	EndpointID string
+	Status     string
+	Search     string
+}
+
+// ListActivity returns recent Activity rows visible to the authenticated user.
+func (c *Client) ListActivity(ctx context.Context, opts ActivityListOptions) ([]ActivityEntry, error) {
+	u, err := url.Parse(c.WebBase + "/app/api/cli/activity")
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	if opts.Limit > 0 {
+		q.Set("limit", fmt.Sprintf("%d", opts.Limit))
+	}
+	if opts.After != "" {
+		q.Set("after", opts.After)
+	}
+	if opts.EndpointID != "" {
+		q.Set("endpoint", opts.EndpointID)
+	}
+	if opts.Status != "" {
+		q.Set("status", opts.Status)
+	}
+	if opts.Search != "" {
+		q.Set("search", opts.Search)
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.RefreshToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("GET /app/api/cli/activity: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, newAPIError(resp.StatusCode, string(body))
+	}
+
+	var parsed struct {
+		Entries []ActivityEntry `json:"entries"`
+	}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return nil, fmt.Errorf("parse activity response: %w", err)
+	}
+	return parsed.Entries, nil
 }

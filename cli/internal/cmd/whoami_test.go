@@ -36,4 +36,7 @@ func TestPrintWhoamiLimits(t *testing.T) {
 	if !bytes.Contains(buf.Bytes(), []byte("personal endpoints: 1/1")) {
 		t.Fatalf("output missing endpoints: %q", out)
 	}
+	if !bytes.Contains(buf.Bytes(), []byte("max tools (account total): 50")) {
+		t.Fatalf("output missing free account tools: %q", out)
+	}
 }
