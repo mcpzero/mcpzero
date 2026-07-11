@@ -5,6 +5,8 @@ description: Combine multiple MCP servers behind a single endpoint with intellig
 
 MCPZERO **semantic aggregation** lets you expose local MCP servers through one endpoint. Clients can address each server directly or use the endpoint root as a unified **meta server**.
 
+**Definition:** Semantic aggregation multiplexes one or more backend MCP servers behind a single endpoint root URL so clients talk to a meta server (`meta_search` / `meta_call_tool`) instead of enumerating every upstream tool at connect time.
+
 Whenever a tunnel registers one or more servers — **including a single server** — the gateway enables the meta server at the endpoint root by default.
 
 ## How it works

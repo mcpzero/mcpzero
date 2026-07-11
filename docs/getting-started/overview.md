@@ -5,6 +5,8 @@ description: Core concepts — endpoints, tunnels, aggregation, API keys, and th
 
 MCPZERO is a **secure MCP aggregation gateway**. It turns local MCP servers into remote HTTP endpoints that AI clients like Cursor can call — with semantic aggregation, progressive discovery, and zero-trust security built in.
 
+**In one sentence:** MCPZERO publishes, aggregates, and secures local MCP servers behind one zero-trust gateway URL so agents can discover tools on demand instead of loading every schema upfront.
+
 
 ## Core concepts
 

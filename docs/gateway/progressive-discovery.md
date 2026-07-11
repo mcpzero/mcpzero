@@ -5,6 +5,8 @@ description: Let AI clients discover MCP tools on demand instead of loading full
 
 **Progressive discovery** is MCPZERO's approach to tool loading. Instead of dumping every tool schema into the LLM context at session start, the client discovers tools on demand through a small meta-tool surface at the **endpoint root**.
 
+**Definition:** Progressive discovery means AI clients discover tools on demand — at the endpoint root, `tools/list` returns only `meta_search` and `meta_call_tool`; agents search by intent, then call the matched tool.
+
 ## The problem
 
 An endpoint might expose dozens of tools on one server (filesystem, browser automation, a large custom API) or spread across several servers. Traditional MCP clients call `tools/list` on a direct server path once and inject every schema into the prompt — wasting context tokens and slowing the first turn.
