@@ -72,7 +72,8 @@ edge:
 - **Tool Hijacking Defense** *(Enterprise · Roadmap)* — scans tool arguments and returned
   content for injection and jailbreak payloads, neutralizing compromised tools.
 - **Team sharing & audit** — share endpoints across members, visualize traffic,
-  and retain searchable audit logs on Team and Enterprise plans.
+  and retain searchable audit logs; NDJSON export and webhook alerts on Personal+
+  (Team adds higher caps and team-scoped alerts).
 
 ## Get started
 

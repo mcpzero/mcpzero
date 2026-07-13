@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -23,6 +24,7 @@ func runWatch(args []string) error {
 	interval := fs.Duration("interval", 2*time.Second, "Poll interval")
 	once := fs.Bool("once", false, "Fetch once and exit (no follow)")
 	limit := fs.Int("limit", 20, "Max rows per poll")
+	asJSON := fs.Bool("json", false, "Emit machine-readable JSON lines")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -49,12 +51,13 @@ func runWatch(args []string) error {
 		if err != nil {
 			return err
 		}
-		// API returns newest first; print oldest→newest for readability.
-		printActivityEntries(reverseEntries(entries))
+		printActivityEntries(reverseEntries(entries), *asJSON)
 		return nil
 	}
 
-	fmt.Fprintf(os.Stderr, "watching activity on %s (Ctrl-C to stop)\n", web)
+	if !*asJSON {
+		fmt.Fprintf(os.Stderr, "watching activity on %s (Ctrl-C to stop)\n", web)
+	}
 	var after string
 	first := true
 	for {
@@ -64,7 +67,6 @@ func runWatch(args []string) error {
 		pollOpts := opts
 		pollOpts.After = after
 		if first && after == "" {
-			// Initial snapshot: show recent history once.
 			pollOpts.After = ""
 		}
 		entries, err := client.ListActivity(ctx, pollOpts)
@@ -72,14 +74,13 @@ func runWatch(args []string) error {
 			return err
 		}
 		if first {
-			printActivityEntries(reverseEntries(entries))
+			printActivityEntries(reverseEntries(entries), *asJSON)
 			if len(entries) > 0 {
-				after = entries[0].CreatedAt // newest
+				after = entries[0].CreatedAt
 			}
 			first = false
 		} else if len(entries) > 0 {
-			// entries are newest-first; print chronological.
-			printActivityEntries(reverseEntries(entries))
+			printActivityEntries(reverseEntries(entries), *asJSON)
 			after = entries[0].CreatedAt
 		}
 
@@ -101,30 +102,57 @@ func reverseEntries(in []cloud.ActivityEntry) []cloud.ActivityEntry {
 	return out
 }
 
-func printActivityEntries(entries []cloud.ActivityEntry) {
+func formatActivityLine(e cloud.ActivityEntry) string {
+	tool := "-"
+	if e.ToolName != nil && *e.ToolName != "" {
+		tool = *e.ToolName
+	}
+	server := ""
+	if e.ServerName != nil && *e.ServerName != "" {
+		server = " @" + *e.ServerName
+	}
+	lat := ""
+	if e.LatencyMs != nil {
+		lat = fmt.Sprintf(" %dms", *e.LatencyMs)
+	}
+	extra := formatActivityExtras(e)
+	return fmt.Sprintf(
+		"%s  %-12s  %-28s%s%s  %s%s\n  → %s\n",
+		e.CreatedAt,
+		e.Status,
+		tool,
+		server,
+		lat,
+		e.EndpointID,
+		extra,
+		e.TraceURL,
+	)
+}
+
+func formatActivityExtras(e cloud.ActivityEntry) string {
+	var parts []string
+	if e.ErrorCode != nil && *e.ErrorCode != "" {
+		code := *e.ErrorCode
+		if strings.HasPrefix(code, "search_mode:") {
+			parts = append(parts, "search_mode="+strings.TrimPrefix(code, "search_mode:"))
+		} else if code == "rate_limited" {
+			parts = append(parts, "429 rate_limited")
+		} else {
+			parts = append(parts, "error_code="+code)
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "  [" + strings.Join(parts, " ") + "]"
+}
+
+func printActivityEntries(entries []cloud.ActivityEntry, asJSON bool) {
 	for _, e := range entries {
-		tool := "-"
-		if e.ToolName != nil && *e.ToolName != "" {
-			tool = *e.ToolName
+		if asJSON {
+			_ = json.NewEncoder(os.Stdout).Encode(e)
+			continue
 		}
-		server := ""
-		if e.ServerName != nil && *e.ServerName != "" {
-			server = " @" + *e.ServerName
-		}
-		lat := ""
-		if e.LatencyMs != nil {
-			lat = fmt.Sprintf(" %dms", *e.LatencyMs)
-		}
-		fmt.Fprintf(
-			os.Stdout,
-			"%s  %-12s  %-28s%s%s  %s\n  → %s\n",
-			e.CreatedAt,
-			e.Status,
-			tool,
-			server,
-			lat,
-			e.EndpointID,
-			e.TraceURL,
-		)
+		fmt.Fprint(os.Stdout, formatActivityLine(e))
 	}
 }

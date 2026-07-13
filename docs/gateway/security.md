@@ -20,7 +20,7 @@ By default, MCPZERO records **metadata only** for every tool call:
 - Latency
 - Status code
 
-Request and response bodies are forwarded in-memory. **Free**, **Personal**, and **Team** include tiered cloud payload storage (see table below). Payload retention enforcement by plan is rolling out — see product pricing for committed retention windows.
+Request and response bodies are forwarded in-memory. **Free**, **Personal**, and **Team** include tiered cloud payload storage (see table below). Retention is enforced by plan via the retention worker — see [Plans & pricing](/docs/pricing/plans/) for committed windows.
 
 | Plan | Payload storage |
 |------|-----------------|
@@ -29,7 +29,7 @@ Request and response bodies are forwarded in-memory. **Free**, **Personal**, and
 | Team | 30-day cloud storage |
 | Enterprise | Private BYO storage (S3 / R2 / OSS) |
 
-Inspect calls in [Dashboard → Activity](/app/activity). Team and Enterprise plans add searchable, exportable audit logs.
+Inspect calls in [Dashboard → Activity](/app/activity) (searchable on every plan). **Personal+** can export matching rows as NDJSON; **Personal+** also supports account webhook alerts (Team adds team-scoped alerts). See [Plans & pricing](/docs/pricing/plans/).
 
 ## Rate limiting
 

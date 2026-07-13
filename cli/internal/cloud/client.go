@@ -202,6 +202,7 @@ type ActivityEntry struct {
 	ServerName *string `json:"server_name"`
 	Status     string  `json:"status"`
 	LatencyMs  *int    `json:"latency_ms"`
+	ErrorCode  *string `json:"error_code"`
 	ClientIP   *string `json:"client_ip"`
 	CreatedAt  string  `json:"created_at"`
 	TraceURL   string  `json:"trace_url"`

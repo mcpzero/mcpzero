@@ -12,7 +12,7 @@ MCPZERO lets teams **share MCP capabilities** — expose local tools through gov
 | **Endpoints** | Created in [Dashboard → Endpoints](/app/endpoints). Each endpoint has a unique ID and public gateway URL. |
 | **Tunnels** | A team member runs `mcpzero tunnel start` to bind local MCP servers to an endpoint. Other members call the same URL with their API keys. |
 | **API keys** | Generated per user in [Dashboard → API Keys](/app/api-keys). Keys authenticate client requests at the edge. |
-| **Audit visibility** | Team and Enterprise plans retain payloads and provide searchable audit logs so every tool call is traceable. |
+| **Audit visibility** | Every plan has a searchable Activity ledger. Payload retention and NDJSON export scale by plan; Team adds shared team-pool visibility and higher export caps. |
 
 ## Typical team workflow
 
@@ -21,7 +21,7 @@ MCPZERO lets teams **share MCP capabilities** — expose local tools through gov
 3. A developer starts a multiplexed tunnel: `mcpzero tunnel start --endpoint ep_… --mcp-auto`
 4. Each member configures Cursor at the **endpoint root** URL with their own API key.
 5. Everyone inspects traffic in [Dashboard → Activity](/app/activity) — tool names, latency, and (on paid plans) payloads.
-6. On **Team+**, use **Export NDJSON** on Activity to download matching rows as a zip (up to 5,000 rows; download link expires in 24 hours).
+6. On **Personal+**, use **Export NDJSON** on Activity to download matching rows as a zip (Personal ≤1,000 rows; Team ≤5,000; download link expires in 24 hours). Configure account webhook alerts under [Overview](/app/overview) (Team owners can also set team-scoped alerts under [Team](/app/team)).
 
 Members inherit the team owner's plan tier for gateway limits (cross-endpoint features, rate limits, etc.).
 
@@ -42,9 +42,12 @@ See [Endpoint clusters](/docs/gateway/endpoint-clusters/) for the full workflow,
 | Capability | Minimum plan |
 |------------|--------------|
 | Share endpoints & tunnels | Free |
+| Searchable Activity / Overview SLO | Free |
 | Up to 5 servers / 50 tools | Free & Personal |
-| Payload cloud storage | Personal |
-| Up to 10 servers / 200 tools per tunnel, 5 members, cross-endpoint | Team |
+| Payload cloud storage (7d+) | Personal |
+| NDJSON audit export | Personal |
+| Account webhook alerts | Personal |
+| Up to 10 servers / 200 tools per tunnel, 5 members, cross-endpoint, team alerts | Team |
 | Private deployment & DLP *(Roadmap)* | Enterprise |
 
 See [Plans & pricing](/docs/pricing/plans/) for the full comparison.
