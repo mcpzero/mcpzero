@@ -15,10 +15,9 @@
 </p>
 
 MCPZERO is a **secure MCP aggregation gateway** for the
-[Model Context Protocol](https://modelcontextprotocol.io). It combines semantic
-aggregation, progressive tool discovery, and zero-trust security so you can
-publish and share local MCP servers — without exposing domains, ports, TLS, or
-credentials.
+[Model Context Protocol](https://modelcontextprotocol.io). It publishes,
+aggregates, and secures local MCP servers behind one zero-trust gateway URL so
+agents can discover tools on demand instead of loading every schema upfront.
 
 ```
 your MCP servers (no auth) ──tunnel──▶ gw.mcpzero.io ──▶ aggregation gateway ──▶ Cursor / Claude / Codex

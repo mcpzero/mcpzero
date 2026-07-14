@@ -7,6 +7,7 @@ MCPZERO is a **secure MCP aggregation gateway**. It turns local MCP servers into
 
 **In one sentence:** MCPZERO publishes, aggregates, and secures local MCP servers behind one zero-trust gateway URL so agents can discover tools on demand instead of loading every schema upfront.
 
+Compare MCPZERO with [direct MCP](/docs/compare/vs-direct-mcp/), [tunnel-only tools](/docs/compare/vs-tunnel-only/), or the full [MCP gateway comparison hub](/docs/compare/) (including [ngrok vs Microsoft vs MCPZERO](/docs/compare/mcp-gateways-2026/)). See also [use cases](/docs/use-cases/multi-server-cursor/) and the [FAQ](/docs/faq/).
 
 ## Core concepts
 
