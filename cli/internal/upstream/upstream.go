@@ -175,3 +175,44 @@ var initializeRequest = fmt.Sprintf(
 )
 
 const initializedNotification = `{"jsonrpc":"2.0","method":"notifications/initialized"}`
+
+// internalRPCIDBase is the first wire id assigned when remapping concurrent
+// client requests onto a single stdio/SSE subprocess. Values below this range
+// are reserved for server-initiated requests (e.g. roots/list probes).
+const internalRPCIDBase = 1_000_000_000
+
+func jsonRPCIDRaw(body []byte) json.RawMessage {
+	var m struct {
+		ID json.RawMessage `json:"id"`
+	}
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil
+	}
+	raw := strings.TrimSpace(string(m.ID))
+	if raw == "" || raw == "null" {
+		return nil
+	}
+	return m.ID
+}
+
+func rewriteJSONRPCID(body []byte, newID int) ([]byte, error) {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil, err
+	}
+	idBytes, err := json.Marshal(newID)
+	if err != nil {
+		return nil, err
+	}
+	m["id"] = idBytes
+	return json.Marshal(m)
+}
+
+func setJSONRPCID(body []byte, id json.RawMessage) ([]byte, error) {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil, err
+	}
+	m["id"] = id
+	return json.Marshal(m)
+}

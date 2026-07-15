@@ -40,6 +40,11 @@ type StdioUpstream struct {
 	closeOnce sync.Once
 
 	serverInfoName string
+
+	// idSeq allocates unique wire ids for remapping concurrent client requests
+	// that carry duplicate JSON-RPC ids onto a single stdio subprocess.
+	idSeq   uint64
+	idSeqMu sync.Mutex
 }
 
 // NewStdio creates a stdio upstream. env holds extra KEY=VALUE environment
@@ -80,31 +85,49 @@ func (s *StdioUpstream) Initialize(ctx context.Context) error {
 	return nil
 }
 
+func (s *StdioUpstream) nextInternalRPCID() int {
+	s.idSeqMu.Lock()
+	s.idSeq++
+	seq := s.idSeq
+	s.idSeqMu.Unlock()
+	return internalRPCIDBase + int(seq)
+}
+
 func (s *StdioUpstream) Handle(ctx context.Context, reqBody []byte, emit Emit) error {
 	if s.stdin == nil || s.read == nil {
 		return fmt.Errorf("stdio upstream not initialized")
 	}
 
 	wantsReply := expectsResponse(reqBody)
-	id := jsonRPCID(reqBody)
+	originalID := jsonRPCIDRaw(reqBody)
+	wireBody := reqBody
+	var internalKey string
 
 	// Register the waiter before writing so a fast response can't race ahead of
 	// the pending entry.
 	var replyCh chan Message
-	if wantsReply && id != "" {
+	if wantsReply && originalID != nil {
+		internalID := s.nextInternalRPCID()
+		internalKey = jsonRPCID([]byte(fmt.Sprintf(`{"id":%d}`, internalID)))
+		rewritten, err := rewriteJSONRPCID(reqBody, internalID)
+		if err != nil {
+			return fmt.Errorf("rewrite json-rpc id: %w", err)
+		}
+		wireBody = rewritten
+
 		replyCh = make(chan Message, 1)
 		s.pendingMu.Lock()
-		s.pending[id] = replyCh
+		s.pending[internalKey] = replyCh
 		s.pendingMu.Unlock()
 		defer func() {
 			s.pendingMu.Lock()
-			delete(s.pending, id)
+			delete(s.pending, internalKey)
 			s.pendingMu.Unlock()
 		}()
 	}
 
 	s.writeMu.Lock()
-	err := stdio.WriteMessage(s.stdin, reqBody)
+	err := stdio.WriteMessage(s.stdin, wireBody)
 	s.writeMu.Unlock()
 	if err != nil {
 		return fmt.Errorf("write to mcp stdin: %w", err)
@@ -123,6 +146,13 @@ func (s *StdioUpstream) Handle(ctx context.Context, reqBody []byte, emit Emit) e
 
 	select {
 	case msg := <-replyCh:
+		if originalID != nil {
+			restored, err := setJSONRPCID(msg, originalID)
+			if err != nil {
+				return fmt.Errorf("restore json-rpc id: %w", err)
+			}
+			return emit(restored)
+		}
 		return emit(msg)
 	case <-ctx.Done():
 		return ctx.Err()

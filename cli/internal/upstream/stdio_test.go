@@ -27,7 +27,8 @@ while IFS= read -r line; do
       printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/roots_declined"}'
       ;;
     *'"method":"tools/list"'*)
-      printf '%s\n' '{"jsonrpc":"2.0","id":7,"result":{"tools":[]}}'
+      id=$(printf '%s' "$line" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')
+      printf '%s\n' "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"tools\":[]}}"
       ;;
   esac
 done
@@ -92,5 +93,66 @@ func TestStdioBidirectional(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Handle of a no-method response blocked waiting for a reply")
+	}
+}
+
+// fakeStdioEchoID echoes the request id in tools/list responses so concurrent
+// remapped ids can be correlated.
+const fakeStdioEchoID = `
+while IFS= read -r line; do
+  case "$line" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":0,"result":{"capabilities":{}}}'
+      ;;
+    *'notifications/initialized'*)
+      ;;
+    *'"method":"tools/list"'*)
+      id=$(printf '%s' "$line" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')
+      printf '%s\n' "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"tools\":[]}}"
+      ;;
+  esac
+done
+`
+
+func TestStdioConcurrentDuplicateClientIDs(t *testing.T) {
+	up := NewStdio(fakeStdioEchoID, "", nil, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := up.Initialize(ctx); err != nil {
+		t.Fatalf("Initialize: %v", err)
+	}
+	defer up.Close()
+
+	const n = 8
+	type result struct {
+		idx  int
+		body string
+		err  error
+	}
+	ch := make(chan result, n)
+	for i := 0; i < n; i++ {
+		go func(idx int) {
+			var resp string
+			err := up.Handle(ctx, []byte(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`), func(m Message) error {
+				resp = string(m)
+				return nil
+			})
+			ch <- result{idx: idx, body: resp, err: err}
+		}(i)
+	}
+
+	for i := 0; i < n; i++ {
+		select {
+		case r := <-ch:
+			if r.err != nil {
+				t.Fatalf("client %d: %v", r.idx, r.err)
+			}
+			if jsonRPCID([]byte(r.body)) != "1" {
+				t.Fatalf("client %d: expected restored client id 1, got %s", r.idx, r.body)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatalf("timed out after %d/%d clients", i, n)
+		}
 	}
 }

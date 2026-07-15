@@ -46,6 +46,9 @@ type HTTPUpstream struct {
 	connected  chan struct{} // closed once the legacy SSE endpoint is known
 
 	serverInfoName string
+
+	idSeq   uint64
+	idSeqMu sync.Mutex
 }
 
 // NewHTTP creates an HTTP upstream. transport is one of auto|streamable-http|sse.
@@ -308,6 +311,14 @@ func (h *HTTPUpstream) runLegacyStream(ready chan<- error) {
 	})
 }
 
+func (h *HTTPUpstream) nextInternalRPCID() int {
+	h.idSeqMu.Lock()
+	h.idSeq++
+	seq := h.idSeq
+	h.idSeqMu.Unlock()
+	return internalRPCIDBase + int(seq)
+}
+
 func (h *HTTPUpstream) handleLegacySSE(ctx context.Context, reqBody []byte, emit Emit) error {
 	select {
 	case <-h.connected:
@@ -323,21 +334,31 @@ func (h *HTTPUpstream) handleLegacySSE(ctx context.Context, reqBody []byte, emit
 	}
 
 	wantsReply := expectsResponse(reqBody)
-	id := jsonRPCID(reqBody)
+	originalID := jsonRPCIDRaw(reqBody)
+	wireBody := reqBody
+	var internalKey string
 	var replyCh chan Message
-	if wantsReply && id != "" {
+	if wantsReply && originalID != nil {
+		internalID := h.nextInternalRPCID()
+		internalKey = jsonRPCID([]byte(fmt.Sprintf(`{"id":%d}`, internalID)))
+		rewritten, err := rewriteJSONRPCID(reqBody, internalID)
+		if err != nil {
+			return fmt.Errorf("rewrite json-rpc id: %w", err)
+		}
+		wireBody = rewritten
+
 		replyCh = make(chan Message, 1)
 		h.pendingMu.Lock()
-		h.pending[id] = replyCh
+		h.pending[internalKey] = replyCh
 		h.pendingMu.Unlock()
 		defer func() {
 			h.pendingMu.Lock()
-			delete(h.pending, id)
+			delete(h.pending, internalKey)
 			h.pendingMu.Unlock()
 		}()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, messageURL, bytes.NewReader(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, messageURL, bytes.NewReader(wireBody))
 	if err != nil {
 		return err
 	}
@@ -358,12 +379,26 @@ func (h *HTTPUpstream) handleLegacySSE(ctx context.Context, reqBody []byte, emit
 	}
 
 	// Some servers echo the reply on the POST response too; accept it.
-	if trimmed := bytes.TrimSpace(body); len(trimmed) > 0 && jsonRPCID(trimmed) == id {
+	if trimmed := bytes.TrimSpace(body); len(trimmed) > 0 && internalKey != "" && jsonRPCID(trimmed) == internalKey {
+		if originalID != nil {
+			restored, err := setJSONRPCID(trimmed, originalID)
+			if err != nil {
+				return err
+			}
+			return emit(restored)
+		}
 		return emit(trimmed)
 	}
 
 	select {
 	case msg := <-replyCh:
+		if originalID != nil {
+			restored, err := setJSONRPCID(msg, originalID)
+			if err != nil {
+				return err
+			}
+			return emit(restored)
+		}
 		return emit(msg)
 	case <-ctx.Done():
 		return ctx.Err()
