@@ -21,6 +21,7 @@ Compare MCPZERO with [direct MCP](/docs/compare/vs-direct-mcp/), [tunnel-only to
 | **Semantic aggregation** | Backend server(s) behind one endpoint; the root URL is the meta server (including a single server with many tools). |
 | **Progressive discovery** | Clients discover tools on demand via `meta_search` at the endpoint root instead of loading every schema upfront. |
 | **API key** | Credential for calling an endpoint (`Authorization: Bearer <mz_live_api_key>`). Generated in [Dashboard → API Keys](/app/api-keys). |
+| **OAuth access token** | Short-lived JWT from [MCP OAuth 2.1](/docs/gateway/oauth/) consent — alternative to API keys for Cursor, Claude Code, and Codex. |
 | **Endpoint cluster** | A virtual meta server (`epc_*`) that aggregates **multiple endpoints** for cross-endpoint semantic search and progressive discovery. Team+ only — see [Endpoint clusters](/docs/gateway/endpoint-clusters/). |
 | **CLI login** | `mcpzero login` stores a refresh token on your machine so the CLI can start tunnels — **not** used as the Cursor HTTP credential. |
 | **Ledger** | Per-call trace of tool name, latency, and status. Payload retention depends on your plan. |
@@ -66,7 +67,7 @@ Get from zero to a working meta server test without the wizard:
      }
    }
    ```
-5. **Create an API key** — [Dashboard → API Keys](/app/api-keys) (`mz_live_…`)
+5. **Create an API key** — [Dashboard → API Keys](/app/api-keys) (`mz_live_…`), **or** configure [OAuth in your AI client](/docs/gateway/oauth/)
 6. **Configure Cursor** — point at the **endpoint root** (recommended):
 
    `https://gw.mcpzero.io/v1/ep_abc123`

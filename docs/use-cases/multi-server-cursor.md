@@ -11,7 +11,7 @@ description: Aggregate filesystem, browser, database, and custom MCP servers beh
 |-----------|------------------|
 | Many servers, many configs | One `mcp.json` → one tunnel → one endpoint root |
 | Context bloat from tool schemas | Progressive discovery at endpoint root |
-| Remote access from Cursor | HTTPS gateway with API key auth |
+| Remote access from Cursor | HTTPS gateway with [OAuth](/docs/gateway/oauth/) or API key auth |
 | Credentials on laptop only | Upstream secrets never leave your machine |
 
 ## Architecture
@@ -66,7 +66,7 @@ Point Cursor at the **meta server** (recommended):
 | Field | Value |
 |-------|-------|
 | **URL** | `https://gw.mcpzero.io/v1/ep_abc123` |
-| **Header** | `Authorization: Bearer mz_live_…` |
+| **Auth** | OAuth (URL only — see [MCP OAuth 2.1](/docs/gateway/oauth/#cursor)) **or** `Authorization: Bearer mz_live_…` |
 
 At the root, `tools/list` returns `meta_search` and `meta_call_tool`. The agent searches by intent, then invokes the matched tool on the correct backend.
 
@@ -89,5 +89,6 @@ See [Semantic aggregation](/docs/gateway/semantic-aggregation/) for when to use 
 ## Related
 
 - [Cursor setup](/docs/cli/cursor/)
+- [MCP OAuth 2.1](/docs/gateway/oauth/)
 - [Progressive discovery](/docs/gateway/progressive-discovery/)
 - [MCPZERO vs direct MCP](/docs/compare/vs-direct-mcp/)

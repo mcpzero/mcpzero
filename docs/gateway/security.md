@@ -7,9 +7,18 @@ MCPZERO is a **secure MCP aggregation gateway** — not just a reverse proxy. Ev
 
 ## Zero-trust authentication
 
-All public MCP endpoints require `Authorization: Bearer <api_key>`. Keys are generated in [Dashboard → API Keys](/app/api-keys) and validated at the Cloudflare edge in under 5 milliseconds.
+MCPZERO supports two client authentication modes at the edge:
 
-Clients never see your local network, ports, or upstream credentials. Upstream URLs and auth headers are supplied entirely through the CLI and are **never sent to the gateway**.
+| Mode | Credential | Best for |
+|------|------------|----------|
+| **MCP OAuth 2.1** | Short-lived JWT from Dashboard consent | Cursor, Claude Code, Codex — no long-lived key in config |
+| **API keys** | `Authorization: Bearer <mz_live_api_key>` | Scripts, curl, `mcpzero cursor add`, legacy clients |
+
+Both are validated at the Cloudflare edge in under 5 milliseconds. Keys are generated in [Dashboard → API Keys](/app/api-keys). OAuth uses PRM discovery on the gateway and consent at `https://mcpzero.io/oauth/authorize`.
+
+**Client OAuth setup:** [MCP OAuth 2.1](/docs/gateway/oauth/) — step-by-step for Cursor, Claude Code, and Codex.
+
+Upstream MCP credentials (database URLs, Slack tokens, etc.) are supplied through the CLI or [Secret Vault](/app/key-vault) and are **never sent to the gateway** as part of client auth.
 
 ## Metadata vs. payload retention
 
@@ -64,6 +73,7 @@ The gateway detects routing cycles (including cross-endpoint loops) and blocks t
 
 ## Next
 
+- [MCP OAuth 2.1](/docs/gateway/oauth/)
 - [Team sharing](/docs/gateway/team-sharing/)
 - [Plans & pricing](/docs/pricing/plans/)
 - [Getting started](/docs/getting-started/overview/)

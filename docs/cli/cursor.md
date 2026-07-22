@@ -6,6 +6,8 @@ description: Connect Cursor to your MCPZERO remote MCP endpoint.
 Point Cursor's remote MCP client at your gateway URL. Cursor sends JSON-RPC over
 HTTP; MCPZERO forwards it through your tunnel to the local MCP server.
 
+**Authentication:** use [MCP OAuth 2.1](/docs/gateway/oauth/) (recommended for Cursor — no API key in config) or an API key in the `Authorization` header (below).
+
 ## Recommended: `mcpzero init`
 
 The fastest path is the interactive onboarding wizard:
@@ -54,18 +56,30 @@ mcpzero tunnel start --endpoint ep_abc123 --mcp-auto
 
 Confirm the endpoint shows as connected (CLI prints `tunnel registered`).
 
-### 2. Create an API key
+### 2. Create an API key *(optional if using OAuth)*
 
 In [Dashboard → API Keys](/app/api-keys), generate a key. This is the credential
-Cursor uses to call the endpoint (`mz_live_…`).
+Cursor uses when you configure `Authorization: Bearer mz_live_…` in `mcp.json`.
+
+> **OAuth:** To skip API keys, add only the gateway `url` in Cursor MCP settings.
+> Cursor will run the OAuth flow automatically. See [MCP OAuth 2.1](/docs/gateway/oauth/#cursor).
 
 > **Caution:** The raw key is shown **once**. Store it in your password manager
 > or Cursor config.
 
 ### 3. Configure Cursor (recommended: endpoint root)
 
-In Cursor MCP settings (Remote / Streamable HTTP), add the **endpoint root** —
-the meta server for semantic aggregation and progressive discovery:
+**OAuth (recommended):** in Cursor MCP settings, add only the URL — no headers:
+
+| Field | Value |
+|-------|-------|
+| **URL** | `https://gw.mcpzero.io/v1/ep_abc123` |
+
+Click **Connect** when prompted and complete MCPZERO consent in the browser.
+Full steps: [MCP OAuth 2.1 → Cursor](/docs/gateway/oauth/#cursor).
+
+**API key:** in Cursor MCP settings (Remote / Streamable HTTP), add the **endpoint root**
+with a Bearer header:
 
 | Field | Value |
 |-------|-------|
@@ -141,5 +155,6 @@ see [Security](/docs/gateway/security/).
 
 ## Next
 
+- [MCP OAuth 2.1](/docs/gateway/oauth/) — Cursor, Claude Code, Codex
 - [Init (onboarding)](/docs/cli/init/)
 - [Troubleshooting](/docs/cli/troubleshooting/)

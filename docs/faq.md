@@ -47,7 +47,7 @@ Usually no. The `mcpzero` CLI reads your existing MCP config, starts a tunnel to
 
 ## How does authentication work?
 
-Clients authenticate with `Authorization: Bearer <mz_live_api_key>`. API keys are created in the Dashboard. Upstream MCP credentials never leave your machine; the gateway never stores them.
+Clients can authenticate with **MCP OAuth 2.1** (browser consent, JWT scoped to endpoints or clusters) or `Authorization: Bearer <mz_live_api_key>`. API keys are created in the Dashboard. OAuth setup for Cursor, Claude Code, and Codex is documented in [MCP OAuth 2.1](/docs/gateway/oauth/). Upstream MCP credentials stay on your machine or in Secret Vault; the gateway never stores them as part of client auth.
 
 ## What is an endpoint cluster?
 
