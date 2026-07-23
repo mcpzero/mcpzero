@@ -342,7 +342,7 @@ Expected PRM fields include `authorization_servers: ["https://mcpzero.io"]` and 
 | **Invalid redirect URI** | Redirect URI must match DCR exactly. Re-register the client or let the agent use DCR with its native callback URI. |
 | **Want API keys instead of OAuth** | Add `Authorization: Bearer mz_live_…` (Cursor / Claude headers) or `bearer_token_env_var` (Codex). No OAuth flow runs when a valid key is sent. See [API key mode](#api-key-mode). |
 
-Upstream integrations (Slack, Google) use **Secret Vault** OAuth — separate from client OAuth. See [Security](/docs/gateway/security/) and connect tokens in [Dashboard → Key Vault](/app/key-vault).
+Upstream integrations (Slack, Google) use **Secret Vault** OAuth — connect via Dashboard browser flow (or paste fallback). The gateway refreshes access tokens near expiry when provider client credentials are configured. See [Security](/docs/gateway/security/) and [Dashboard → Key Vault](/app/key-vault).
 
 ## Next
 
